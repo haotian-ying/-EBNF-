@@ -1,0 +1,7 @@
+# ninja log v5
+5	674	7696940471920296	L25Compiler/CMakeFiles/L25Compiler.dir/L25Compiler.cpp.obj	56a188594ee8ab6e
+94	306	7698591706010924	L25Compiler/L25Compiler.exe	ef653982d309ebdb
+2	82	7698591295262498	L25Compiler/CMakeFiles/L25Compiler.dir/main.c.obj	d5b7b409c4babe24
+15	93	7698591704621724	L25Compiler/CMakeFiles/L25Compiler.dir/lexer.c.obj	8762820cd31769ee
+16	96	7697014042391077	L25Compiler/CMakeFiles/L25Compiler.dir/parser.c.obj	f05547155f720b52
+9	160	7698596806403383	build.ninja	2736c9872e1b16d2
