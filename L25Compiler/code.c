@@ -1,27 +1,35 @@
-/* ÖĞ¼ä´úÂëÉú³ÉÆ÷ ¸¨ÖúÓï·¨·ÖÎö */
+/* ä¸­é—´ä»£ç ç”Ÿæˆ å’Œè¯­æ³•åˆ†æ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "common.h"
 
-instruction code[200];         // Ö¸ÁîÁĞ±í
-int insptr;                    // Ö¸ÁîÖ¸Õë
+instruction code[200];         // æŒ‡ä»¤åˆ—è¡¨
+int insptr;                    // æŒ‡ä»¤æŒ‡é’ˆ
 
-// Éú³ÉÒ»ÌõpcodeÖ¸Áî
+// ç”Ÿæˆä¸€æ¡pcodeæŒ‡ä»¤
 void code_gen(Operation op, int value)
 {
+    if (insptr >= 200) {
+        printf("Error: Code array overflow\n");
+        exit(1);
+    }
     code[insptr].op = op;
     code[insptr].value = value;
     insptr++;
 }
 
-// ¶ÁÈ¡µÚpÌõpcodeÖ¸Áî
+// è¯»å–ç¬¬pæ¡pcodeæŒ‡ä»¤
 instruction code_read(int p)
 {
+    if (p < 0 || p >= insptr) {
+        printf("Error: Invalid instruction pointer %d (valid range: 0-%d)\n", p, insptr - 1);
+        exit(1);
+    }
     return code[p];
 }
 
-// Êä³ö´Óbegin¿ªÊ¼µÄpcodeÁĞ±í
+// ä»beginå¼€å§‹åˆ—å‡ºpcodeåˆ—è¡¨
 void code_list(int begin)
 {
     for (int i = begin; i < insptr; i++) {

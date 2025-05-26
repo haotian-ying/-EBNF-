@@ -1,0 +1,6 @@
+program MyApp { 
+	main { 
+		let y = 10;
+		output(y);
+	} 
+}

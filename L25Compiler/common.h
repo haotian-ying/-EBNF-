@@ -2,6 +2,7 @@
 #define __COMMON_H__
 
 #include <stdio.h>
+#include <stdbool.h>
 
 // Token types
 typedef enum {
@@ -117,11 +118,13 @@ void func_def();
 void param_list();
 void stmt_list();
 void stmt();
+void declare(int* pdx);
+void block(int dx, int tx, bool is_main);
 void declare_stmt();
 void assign_stmt();
 void if_stmt();
 void while_stmt();
-void func_call();
+void func_call(int pos);
 void arg_list();
 void input_stmt();
 void output_stmt();
@@ -168,5 +171,4 @@ void print_symbol_table();
     18 次栈顶 &  栈顶 (bool类型)
     19 次栈顶 |  栈顶 (bool类型)
     20 次栈顶 !  栈顶 (bool类型)
-    21 函数传参 (栈顶元素放到指定位置)
-*/
+    21 函数传参 (栈顶元素放到指定位置)*/
