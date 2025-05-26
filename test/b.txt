@@ -1,0 +1,14 @@
+program MathTest {
+  func factorial(n) {
+    if (n == 1) {
+      return 1;
+    } else {
+      return n * factorial(n - 1);
+    };
+  }
+  main {
+    let a = 5;
+    let b = factorial(a);
+    output(b);           
+  }
+}

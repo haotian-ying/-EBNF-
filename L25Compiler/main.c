@@ -7,6 +7,32 @@
 
 FILE* src;                  // 源文件            
 
+// Global variables
+Lexer* lexer = NULL;
+Symble sym;
+SymbolTable table = {0};  // Initialize symbol table
+
+// Function to print symbol table
+void print_symbol_table(SymbolTable* table) {
+    printf("\nSymbol Table:\n");
+    printf("----------------------------------------\n");
+    printf("Name\t\tType\n");
+    printf("----------------------------------------\n");
+    
+    for (int i = 0; i < table->size; i++) {
+        const char* type_str;
+        switch (table->entries[i].kind) {
+            case FUNC: type_str = "Function"; break;
+            case VAR: type_str = "Variable"; break;
+            case PARAM: type_str = "Parameter"; break;
+            default: type_str = "Unknown"; break;
+        }
+        printf("%-16s\t%s\n", table->entries[i].name, type_str);
+    }
+    printf("----------------------------------------\n");
+    printf("Total entries: %d\n", table->size);
+}
+
 int main()
 {
     // 文件名长度 + 文件名
@@ -24,25 +50,26 @@ int main()
     }
     
     // Initialize lexer
-    Lexer* lexer = lexer_init(src);
+    lexer = lexer_init(src);
+    if (lexer == NULL) {
+        printf("Failed to initialize lexer\n");
+        fclose(src);
+        return 1;
+    }
 
-    // Tokenize the input
-    Symble symble;
-    printf("\nTokenizing input file:\n");
-    printf("Type\t\tLexeme\t\tLine\tColumn\n");
+    // Get first token
+    sym = get_sym(lexer);
+
+    printf("\nStarting syntax analysis:\n");
     printf("----------------------------------------\n");
 
-    do {
-        symble = get_sym(lexer);
-        printf("%-12s\t%-12s\t%d\t%d\n",
-            symble_type_to_string(symble.type),
-            symble.lexeme,
-            symble.line,
-            symble.column);
-    } while (symble.type != TOKENEOF && symble.type != ERROR);
+    // Start parsing
+    program(&table);
+
+    // Print symbol table
+    print_symbol_table(&table);
     
-    // Initialize parser
-    
+    // Cleanup
     lexer_free(lexer);
     fclose(src);
     return 0;

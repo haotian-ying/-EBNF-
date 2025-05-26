@@ -6,4 +6,5 @@
 add_executable(L25Compiler 
     main.c
     lexer.c
- )
+    block.c
+)
