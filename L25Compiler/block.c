@@ -5,6 +5,9 @@
 // Global variables
 extern Lexer* lexer;
 extern Symble sym;
+SymbolTable table = { 0 };  // Initialize symbol table
+extern int insptr;             // pcode指令指针
+extern instruction code[200];  // pcode指令数组
 
 // Error handling
 void error(int n) {
@@ -13,18 +16,18 @@ void error(int n) {
 }
 
 // Symbol table operations
-void enter(SymbolTable* table, const char* name, ObjectType kind) {
-    if (table->size >= 100) {
+void enter(const char* name, int level,ObjectType kind) {
+    if (table.size >= 100) {
         error(1); // Symbol table overflow
     }
-    strcpy(table->entries[table->size].name, name);
-    table->entries[table->size].kind = kind;
-    table->size++;
+    strcpy(table.entries[table.size].name, name);
+    table.entries[table.size].kind = kind;
+    table.size++;
 }
 
-int position(SymbolTable* table, const char* name) {
-    for (int i = table->size - 1; i >= 0; i--) {
-        if (strcmp(table->entries[i].name, name) == 0) {
+int position(const char* name) {
+    for (int i = table.size - 1; i >= 0; i--) {
+        if (strcmp(table.entries[i].name, name) == 0) {
             return i;
         }
     }
@@ -32,7 +35,7 @@ int position(SymbolTable* table, const char* name) {
 }
 
 // Parser implementation
-void program(SymbolTable* table) {
+void program() {
     if (sym.type != PROGRAMSYM) error(2);
     sym = get_sym(lexer);
     
@@ -43,7 +46,7 @@ void program(SymbolTable* table) {
     sym = get_sym(lexer);
     
     while (sym.type == FUNCSYM) {
-        func_def(table);
+        func_def();
     }
     
     if (sym.type != MAINSYM) error(5);
@@ -52,7 +55,7 @@ void program(SymbolTable* table) {
     if (sym.type != LBRACE) error(6);
     sym = get_sym(lexer);
     
-    stmt_list(table);
+    stmt_list();
     
     if (sym.type != RBRACE) error(7);
     sym = get_sym(lexer);
@@ -61,7 +64,7 @@ void program(SymbolTable* table) {
     sym = get_sym(lexer);
 }
 
-void func_def(SymbolTable* table) {
+void func_def() {
     sym = get_sym(lexer); // Skip 'func'
     
     if (sym.type != IDENT) error(9);
@@ -71,11 +74,12 @@ void func_def(SymbolTable* table) {
     
     if (sym.type != LPAREN) error(10);
     sym = get_sym(lexer);
+    code_gen(jmp, 0);
     
-    enter(table, func_name, FUNC);
+    enter(func_name, 0,FUNC);
     
     if (sym.type != RPAREN) {
-        param_list(table);
+        param_list();
     }
     
     if (sym.type != RPAREN) error(11);
@@ -84,95 +88,95 @@ void func_def(SymbolTable* table) {
     if (sym.type != LBRACE) error(12);
     sym = get_sym(lexer);
     
-    stmt_list(table);
+    stmt_list();
     
     if (sym.type != RBRACE) error(15);
     sym = get_sym(lexer);
 }
 
-void param_list(SymbolTable* table) {
+void param_list() {
     if (sym.type != IDENT) error(16);
-    enter(table, sym.lexeme, PARAM);
+    enter(sym.lexeme,0,PARAM);
     sym = get_sym(lexer);
     
     while (sym.type == COMMA) {
         sym = get_sym(lexer);
         if (sym.type != IDENT) error(17);
-        enter(table, sym.lexeme, PARAM);
+        enter(sym.lexeme, 0,PARAM);
         sym = get_sym(lexer);
     }
 }
 
-void stmt_list(SymbolTable* table) {
-    stmt(table);
+void stmt_list() {
+    stmt();
     if (sym.type != SEMICOLON) error(18);
     sym = get_sym(lexer);
     
     while (sym.type != RBRACE) {
-        stmt(table);
+        stmt();
         if (sym.type != SEMICOLON) error(19);
         sym = get_sym(lexer);
     }
 }
 
-void stmt(SymbolTable* table) {
+void stmt() {
     switch (sym.type) {
         case LETSYM:
-            declare_stmt(table);
+            declare_stmt();
             break;
         case IDENT:
-            assign_stmt(table);
+            assign_stmt();
             break;
         case IFSYM:
-            if_stmt(table);
+            if_stmt();
             break;
         case WHILESYM:
-            while_stmt(table);
+            while_stmt();
             break;
         case INPUTSYM:
-            input_stmt(table);
+            input_stmt();
             break;
         case OUTPUTSYM:
-            output_stmt(table);
+            output_stmt();
             break;
         case RETURNSYM:
-            return_stmt(table);
+            return_stmt();
             break;
         default:
             error(20);
     }
 }
 
-void declare_stmt(SymbolTable* table) {
+void declare_stmt() {
     sym = get_sym(lexer); // Skip 'let'
     
     if (sym.type != IDENT) error(21);
-    enter(table, sym.lexeme, VAR);
+    enter(sym.lexeme,0,VAR);
     sym = get_sym(lexer);
     
     if (sym.type == BECOMES) {
         sym = get_sym(lexer);
-        expr(table);
+        expr();
     }
 }
 
-void assign_stmt(SymbolTable* table) {
-    if (position(table, sym.lexeme) == -1) error(22);
+void assign_stmt() {
+    if (position(sym.lexeme) == -1) error(22);
     sym = get_sym(lexer);
     
     if (sym.type != BECOMES) error(23);
     sym = get_sym(lexer);
     
-    expr(table);
+    expr();
 }
 
-void if_stmt(SymbolTable* table) {
+void if_stmt() {
     sym = get_sym(lexer); // Skip 'if'
     
     if (sym.type != LPAREN) error(24);
     sym = get_sym(lexer);
     
-    bool_expr(table);
+    bool_expr();
     
     if (sym.type != RPAREN) error(25);
     sym = get_sym(lexer);
@@ -180,7 +184,7 @@ void if_stmt(SymbolTable* table) {
     if (sym.type != LBRACE) error(26);
     sym = get_sym(lexer);
     
-    stmt_list(table);
+    stmt_list();
     
     if (sym.type != RBRACE) error(27);
     sym = get_sym(lexer);
@@ -189,19 +193,19 @@ void if_stmt(SymbolTable* table) {
         sym = get_sym(lexer);
         if (sym.type != LBRACE) error(28);
         sym = get_sym(lexer);
-        stmt_list(table);
+        stmt_list();
         if (sym.type != RBRACE) error(29);
         sym = get_sym(lexer);
     }
 }
 
-void while_stmt(SymbolTable* table) {
+void while_stmt() {
     sym = get_sym(lexer); // Skip 'while'
     
     if (sym.type != LPAREN) error(30);
     sym = get_sym(lexer);
     
-    bool_expr(table);
+    bool_expr();
     
     if (sym.type != RPAREN) error(31);
     sym = get_sym(lexer);
@@ -209,45 +213,45 @@ void while_stmt(SymbolTable* table) {
     if (sym.type != LBRACE) error(32);
     sym = get_sym(lexer);
     
-    stmt_list(table);
+    stmt_list();
     
     if (sym.type != RBRACE) error(33);
     sym = get_sym(lexer);
 }
 
-void func_call(SymbolTable* table) {
+void func_call() {
     sym = get_sym(lexer);
     
     if (sym.type != RPAREN) {
-        arg_list(table);
+        arg_list();
     }
     
     if (sym.type != RPAREN) error(36);
     sym = get_sym(lexer);
 }
 
-void arg_list(SymbolTable* table) {
-    expr(table);
+void arg_list() {
+    expr();
     while (sym.type == COMMA) {
         sym = get_sym(lexer);
-        expr(table);
+        expr();
     }
 }
 
-void input_stmt(SymbolTable* table) {
+void input_stmt() {
     sym = get_sym(lexer); // Skip 'input'
     
     if (sym.type != LPAREN) error(37);
     sym = get_sym(lexer);
     
     if (sym.type != IDENT) error(38);
-    if (position(table, sym.lexeme) == -1) error(39);
+    if (position(sym.lexeme) == -1) error(39);
     sym = get_sym(lexer);
     
     while (sym.type == COMMA) {
         sym = get_sym(lexer);
         if (sym.type != IDENT) error(40);
-        if (position(table, sym.lexeme) == -1) error(41);
+        if (position(sym.lexeme) == -1) error(41);
         sym = get_sym(lexer);
     }
     
@@ -255,16 +259,16 @@ void input_stmt(SymbolTable* table) {
     sym = get_sym(lexer);
 }
 
-void output_stmt(SymbolTable* table) {
+void output_stmt() {
     sym = get_sym(lexer); // Skip 'output'
     
     if (sym.type != LPAREN) error(43);
     sym = get_sym(lexer);
     
-    expr(table);
+    expr();
     while (sym.type == COMMA) {
         sym = get_sym(lexer);
-        expr(table);
+        expr();
     }
     
     if (sym.type != RPAREN) error(44);
@@ -272,7 +276,7 @@ void output_stmt(SymbolTable* table) {
 }
 
 // Add return statement handling
-void return_stmt(SymbolTable* table) {
+void return_stmt() {
     sym = get_sym(lexer); // Skip 'return'
 
     // Check if there's an expression to return
@@ -282,40 +286,40 @@ void return_stmt(SymbolTable* table) {
 }
 
 
-void bool_expr(SymbolTable* table) {
-    expr(table);
+void bool_expr() {
+    expr();
     if (sym.type != EQL && sym.type != NEQ && 
         sym.type != LSS && sym.type != LEQ && 
         sym.type != GTR && sym.type != GEQ) {
         error(45);
     }
     sym = get_sym(lexer);
-    expr(table);
+    expr();
 }
 
-void expr(SymbolTable* table) {
+void expr() {
     if (sym.type == PLUS || sym.type == MINUS) {
         sym = get_sym(lexer);
     }
-    term(table);
+    term();
     while (sym.type == PLUS || sym.type == MINUS) {
         sym = get_sym(lexer);
-        term(table);
+        term();
     }
 }
 
-void term(SymbolTable* table) {
-    factor(table);
+void term() {
+    factor();
     while (sym.type == MULTIPLY || sym.type == DIVIDE) {
         sym = get_sym(lexer);
-        factor(table);
+        factor();
     }
 }
 
-void factor(SymbolTable* table) {
+void factor() {
     switch (sym.type) {
         case IDENT:
-            if (position(table, sym.lexeme) == -1) error(46);
+            if (position(sym.lexeme) == -1) error(46);
             sym = get_sym(lexer);
             if (sym.type == LPAREN) {
                 func_call(table);

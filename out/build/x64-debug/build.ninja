@@ -98,6 +98,20 @@ build L25Compiler\CMakeFiles\L25Compiler.dir\block.c.obj: C_COMPILER__L25Compile
   TARGET_COMPILE_PDB = L25Compiler\CMakeFiles\L25Compiler.dir\
   TARGET_PDB = L25Compiler\L25Compiler.pdb
 
+build L25Compiler\CMakeFiles\L25Compiler.dir\code.c.obj: C_COMPILER__L25Compiler_unscanned_Debug D$:\编译原理\code\大作业\L25Compiler\L25Compiler\code.c || cmake_object_order_depends_target_L25Compiler
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /MDd /Zi /Ob0 /Od /RTC1 -std:c11
+  OBJECT_DIR = L25Compiler\CMakeFiles\L25Compiler.dir
+  OBJECT_FILE_DIR = L25Compiler\CMakeFiles\L25Compiler.dir
+  TARGET_COMPILE_PDB = L25Compiler\CMakeFiles\L25Compiler.dir\
+  TARGET_PDB = L25Compiler\L25Compiler.pdb
+
+build L25Compiler\CMakeFiles\L25Compiler.dir\interprete.c.obj: C_COMPILER__L25Compiler_unscanned_Debug D$:\编译原理\code\大作业\L25Compiler\L25Compiler\interprete.c || cmake_object_order_depends_target_L25Compiler
+  FLAGS = /DWIN32 /D_WINDOWS /W3 /MDd /Zi /Ob0 /Od /RTC1 -std:c11
+  OBJECT_DIR = L25Compiler\CMakeFiles\L25Compiler.dir
+  OBJECT_FILE_DIR = L25Compiler\CMakeFiles\L25Compiler.dir
+  TARGET_COMPILE_PDB = L25Compiler\CMakeFiles\L25Compiler.dir\
+  TARGET_PDB = L25Compiler\L25Compiler.pdb
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target L25Compiler
@@ -106,7 +120,7 @@ build L25Compiler\CMakeFiles\L25Compiler.dir\block.c.obj: C_COMPILER__L25Compile
 #############################################
 # Link the executable L25Compiler\L25Compiler.exe
 
-build L25Compiler\L25Compiler.exe: C_EXECUTABLE_LINKER__L25Compiler_Debug L25Compiler\CMakeFiles\L25Compiler.dir\main.c.obj L25Compiler\CMakeFiles\L25Compiler.dir\lexer.c.obj L25Compiler\CMakeFiles\L25Compiler.dir\block.c.obj
+build L25Compiler\L25Compiler.exe: C_EXECUTABLE_LINKER__L25Compiler_Debug L25Compiler\CMakeFiles\L25Compiler.dir\main.c.obj L25Compiler\CMakeFiles\L25Compiler.dir\lexer.c.obj L25Compiler\CMakeFiles\L25Compiler.dir\block.c.obj L25Compiler\CMakeFiles\L25Compiler.dir\code.c.obj L25Compiler\CMakeFiles\L25Compiler.dir\interprete.c.obj
   FLAGS = /DWIN32 /D_WINDOWS /W3 /MDd /Zi /Ob0 /Od /RTC1
   LINK_FLAGS = /machine:x64 /debug /INCREMENTAL /subsystem:console
   LINK_LIBRARIES = kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib

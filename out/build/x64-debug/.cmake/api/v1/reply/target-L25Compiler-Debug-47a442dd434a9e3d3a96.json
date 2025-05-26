@@ -54,7 +54,9 @@
 			[
 				0,
 				1,
-				2
+				2,
+				3,
+				4
 			]
 		}
 	],
@@ -93,7 +95,9 @@
 			[
 				0,
 				1,
-				2
+				2,
+				3,
+				4
 			]
 		}
 	],
@@ -115,6 +119,18 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "L25Compiler/block.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "L25Compiler/code.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "L25Compiler/interprete.c",
 			"sourceGroupIndex" : 0
 		}
 	],

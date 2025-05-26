@@ -75,11 +75,8 @@ typedef enum {
 typedef struct {
     char name[256];     // Identifier name
     ObjectType kind;    // Type of the entry
-    int level;          // Nesting level
     int address;        // Memory address
     int size;           // Size of data area (for functions)
-    int param_count;    // Number of parameters (for functions)
-    int return_type;    // Return type (for functions)
 } TableEntry;
 
 // Symbol table
@@ -88,51 +85,25 @@ typedef struct {
     int size;                 // Current size of symbol table
 } SymbolTable;
 
-// Intermediate code instructions
+/* Pcode操作码 */
 typedef enum {
-    LIT,    // Load literal
-    OPR,    // Operation
-    LOD,    // Load variable
-    STO,    // Store variable
-    CAL,    // Call function
-    INT,    // Initialize stack frame
-    JMP,    // Jump
-    JPC,    // Jump if false
-    RET,    // Return from function
-    PAR,    // Parameter passing
-} InstructionType;
+    lit,          // 立即数赋值
+    opr,          // 各种操作
+    lod,          // load
+    sto,          // store
+    cal,          // 函数调用
+    ini,          // 开辟栈中空间(为了避免和int重名)
+    jmp,          // 无条件跳转
+    jpc,          // 条件跳转
+    ret
+} Operation;
 
-// Operation codes
-typedef enum {
-    ADD,    // Addition
-    SUB,    // Subtraction
-    MUL,    // Multiplication
-    DIV,    // Division
-    NEG,    // Negation
-    ODD,    // Odd test
-    EQ,     // Equal
-    NE,     // Not equal
-    LT,     // Less than
-    LE,     // Less or equal
-    GT,     // Greater than
-    GE,     // Greater or equal
-} OperationCode;
-
-// Intermediate code instruction
+/* pcode指令 */
 typedef struct {
-    InstructionType type;
-    int level;      // Lexical level
-    int address;    // Address or value
-    OperationCode op; // Operation code for OPR
-} Instruction;
+    Operation op;       // 操作码
+    int value;    // 操作数
+} instruction;
 
-// Code generation context
-typedef struct {
-    Instruction code[1000];  // Array of instructions
-    int code_size;          // Current size of code array
-    int data_size;          // Current size of data area
-    int level;              // Current lexical level
-} CodeContext;
 
 // Function declarations of lexer
 Lexer* lexer_init(FILE* source);
@@ -141,35 +112,61 @@ Symble get_sym(Lexer* lexer);
 const char* symble_type_to_string(SymbleType type);
 
 // Function declarations of parser
-void program(SymbolTable* table);
-void func_def(SymbolTable* table);
-void param_list(SymbolTable* table);
-void stmt_list(SymbolTable* table);
-void stmt(SymbolTable* table);
-void declare_stmt(SymbolTable* table);
-void assign_stmt(SymbolTable* table);
-void if_stmt(SymbolTable* table);
-void while_stmt(SymbolTable* table);
-void func_call(SymbolTable* table);
-void arg_list(SymbolTable* table);
-void input_stmt(SymbolTable* table);
-void output_stmt(SymbolTable* table);
-void bool_expr(SymbolTable* table);
-void return_stmt(SymbolTable* table);
-void expr(SymbolTable* table);
-void term(SymbolTable* table);
-void factor(SymbolTable* table);
+void pogram();
+void func_def();
+void param_list();
+void stmt_list();
+void stmt();
+void declare_stmt();
+void assign_stmt();
+void if_stmt();
+void while_stmt();
+void func_call();
+void arg_list();
+void input_stmt();
+void output_stmt();
+void bool_expr();
+void return_stmt();
+void expr();
+void term();
+void factor();
+
+// code generate
+void code_gen(ObjectType op,int value);
+instruction code_read(int p);
+void code_list(int begin);
+
+void interpret();
 
 // Helper functions for symbol table
-void enter(SymbolTable* table, const char* name, ObjectType kind);
-int position(SymbolTable* table, const char* name);
+void enter(const char* name, ObjectType kind);
+int position(const char* name);
 void error(int n);
-void print_symbol_table(SymbolTable* table);
+void print_symbol_table();
+#endif 
 
-// Function declarations for code generation
-void gen_instruction(CodeContext* ctx, InstructionType type, int level, int address);
-void gen_operation(CodeContext* ctx, OperationCode op);
-void gen_function_call(CodeContext* ctx, const char* func_name, int param_count);
-void gen_return(CodeContext* ctx, int has_value);
-
-#endif // COMMON_H 
+/*
+    opr 指令
+    0  调用返回(无返回值)
+    1  调用返回(有返回值)
+    2  栈顶元素取负
+    3  次栈顶 +  栈顶
+    4  次栈顶 -  栈顶
+    5  次栈顶 *  栈顶
+    6  次栈顶 /  栈顶
+    7  栈顶顶 %  栈顶
+    8  次栈顶 == 栈顶 ? 1 : 0
+    9  次栈顶 != 栈顶 ? 1 : 0
+    10 次栈顶 <  栈顶 ? 1 : 0
+    11 次栈顶 >= 栈顶 ? 1 : 0
+    12 次栈顶 >  栈顶 ? 1 : 0
+    13 次栈顶 <= 栈顶 ? 1 : 0
+    14 输出 int (print)
+    15 输入 int (scan)
+    16 输出 bool (fprint)
+    17 输入 bool (fscan)
+    18 次栈顶 &  栈顶 (bool类型)
+    19 次栈顶 |  栈顶 (bool类型)
+    20 次栈顶 !  栈顶 (bool类型)
+    21 函数传参 (栈顶元素放到指定位置)
+*/

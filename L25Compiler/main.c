@@ -10,27 +10,27 @@ FILE* src;                  // 源文件
 // Global variables
 Lexer* lexer = NULL;
 Symble sym;
-SymbolTable table = {0};  // Initialize symbol table
+extern SymbolTable table;
 
 // Function to print symbol table
-void print_symbol_table(SymbolTable* table) {
+void print_symbol_table() {
     printf("\nSymbol Table:\n");
     printf("----------------------------------------\n");
     printf("Name\t\tType\n");
     printf("----------------------------------------\n");
     
-    for (int i = 0; i < table->size; i++) {
+    for (int i = 0; i < table.size; i++) {
         const char* type_str;
-        switch (table->entries[i].kind) {
+        switch (table.entries[i].kind) {
             case FUNC: type_str = "Function"; break;
             case VAR: type_str = "Variable"; break;
             case PARAM: type_str = "Parameter"; break;
             default: type_str = "Unknown"; break;
         }
-        printf("%-16s\t%s\n", table->entries[i].name, type_str);
+        printf("%-16s\t%s\n", table.entries[i].name, type_str);
     }
     printf("----------------------------------------\n");
-    printf("Total entries: %d\n", table->size);
+    printf("Total entries: %d\n", table.size);
 }
 
 int main()
@@ -64,10 +64,10 @@ int main()
     printf("----------------------------------------\n");
 
     // Start parsing
-    program(&table);
+    program();
 
     // Print symbol table
-    print_symbol_table(&table);
+    print_symbol_table();
     
     // Cleanup
     lexer_free(lexer);
