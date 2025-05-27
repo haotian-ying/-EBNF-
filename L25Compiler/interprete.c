@@ -1,43 +1,41 @@
-/* è§£é‡Šæ‰§è¡ŒpcodeæŒ‡ä»¤ */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "common.h"
 
-// å¤–éƒ¨å˜é‡å£°æ˜
-extern int insptr;            // pcodeæŒ‡ä»¤æŒ‡é’ˆ
-extern instruction code[200]; // pcodeæŒ‡ä»¤æ•°ç»„
+// Íâ²¿±äÁ¿ÉùÃ÷
+extern int insptr;            // pcodeÖ¸ÁîÖ¸Õë
+extern instruction code[200]; // pcodeÖ¸ÁîÊı×é
 
-static int stack[1024];               // æ•°æ®æ ˆ
-static int max_stack_size = 1024;     // æœ€å¤§æ ˆå¤§å°
+static int stack[1024];               // Êı¾İÕ»
+static int max_stack_size = 1024;     // ×î´óÕ»´óĞ¡
 
-int p = 0;    // æŒ‡ä»¤æŒ‡é’ˆ
-int b = 1;    // åŸºå€
-int t = 1;    // æ ˆé¡¶
+int p = 0;    // Ö¸ÁîÖ¸Õë
+int b = 1;    // »ùÖ·
+int t = 1;    // Õ»¶¥
 
-// è¢«è°ƒç”¨å‡½æ•°å»ºç«‹æ ˆå¸§
-int k = 3;    
+// ±»µ÷ÓÃº¯Êı½¨Á¢Õ»Ö¡
+static int k = 3;
 
-// æ‰“å°æŒ‡ä»¤ä¿¡æ¯
+// ´òÓ¡Ö¸ÁîĞÅÏ¢
 void print_instruction(int p, instruction ins) {
     printf("p = %d: ", p);
     switch (ins.op) {
-        case lit: printf("LIT %d", ins.value); break;
-        case opr: printf("OPR %d", ins.value); break;
-        case lod: printf("LOD %d", ins.value); break;
-        case sto: printf("STO %d", ins.value); break;
-        case cal: printf("CAL %d", ins.value); break;
-        case ini: printf("INI %d", ins.value); break;
-        case jmp: printf("JMP %d", ins.value); break;
-        case jpc: printf("JPC %d", ins.value); break;
-        case ret: printf("RET"); break;
-        default: printf("UNKNOWN"); break;
+    case lit: printf("LIT %d", ins.value); break;
+    case opr: printf("OPR %d", ins.value); break;
+    case lod: printf("LOD %d", ins.value); break;
+    case sto: printf("STO %d", ins.value); break;
+    case cal: printf("CAL %d", ins.value); break;
+    case ini: printf("INI %d", ins.value); break;
+    case jmp: printf("JMP %d", ins.value); break;
+    case jpc: printf("JPC %d", ins.value); break;
+    case ret: printf("RET"); break;
+    default: printf("UNKNOWN"); break;
     }
     printf("\n");
 }
 
-// è·å–æ ˆæ•°æ®
+// »ñÈ¡Õ»Êı¾İ
 void get_stack_data(int* base, int* top, int* stack_data) {
     *base = b;
     *top = t;
@@ -46,194 +44,194 @@ void get_stack_data(int* base, int* top, int* stack_data) {
     }
 }
 
-// æ‰“å°æ ˆå†…å®¹
+// ´òÓ¡Õ»ÄÚÈİ
 void print_stack() {
     printf("Stack: [");
-    for (int i = 0; i <= t+k; i++) {
+    for (int i = 0; i <= t + k; i++) {
         printf("%d", stack[i]);
-        if (i < t+k) printf(", ");
+        if (i < t + k) printf(", ");
     }
     printf("]\n");
-    printf("instrution:%d Base: %d, Top: %d, K:%d\n",p-1,b,t,k);
+    printf("instruction:%d Base: %d, Top: %d, K:%d\n", p - 1, b, t, k);
     printf("----------------------------------------\n");
 }
 
-// è§£é‡Šæ‰§è¡Œ
+// ½âÊÍÖ´ĞĞ
 void interpret()
 {
-    int max_instructions = 10000;     // æœ€å¤§æŒ‡ä»¤æ‰§è¡Œæ¬¡æ•°
-    int instruction_count = 0;        // å·²æ‰§è¡ŒæŒ‡ä»¤è®¡æ•°
-    int param_count = 0;              // å½“å‰å‡½æ•°å‚æ•°è®¡æ•°
+    int max_instructions = 10000;     // ×î´óÖ¸ÁîÖ´ĞĞ´ÎÊı
+    int instruction_count = 0;        // ÒÑÖ´ĞĞÖ¸Áî¼ÆÊı
+    int param_count = 0;              // µ±Ç°º¯Êı²ÎÊı¼ÆÊı
 
-    instruction ins; // å½“å‰æŒ‡ä»¤
+    instruction ins; // µ±Ç°Ö¸Áî
 
-    // æ ˆçš„åˆå§‹åŒ–
-    stack[0] = 0;  // stack[0] ä¸ä½¿ç”¨
-    stack[1] = 0;  // å‚æ•°èµ·å§‹ä½ç½® base éšè°ƒç”¨è¿‡ç¨‹æ›´æ–°
-    stack[2] = 0;  // è¿”å›åœ°å€
-    stack[3] = 0;  // è¿”å›å€¼
+    // Õ»µÄ³õÊ¼»¯
+    stack[0] = 0;  // stack[0] ²»Ê¹ÓÃ
+    stack[1] = 0;  // ²ÎÊıÆğÊ¼Î»ÖÃ base Ëæµ÷ÓÃ¹ı³Ì¸üĞÂ
+    stack[2] = 0;  // ·µ»ØµØÖ·
+    stack[3] = 0;  // ·µ»ØÖµ
 
     printf("\n=== Program Execution Start ===\n");
     printf("----------------------------------------\n");
     do {
-        // æ£€æŸ¥æŒ‡ä»¤æ‰§è¡Œæ¬¡æ•°
+        // ¼ì²éÖ¸ÁîÖ´ĞĞ´ÎÊı
         if (instruction_count++ > max_instructions) {
             printf("\nError: Maximum instruction count exceeded\n");
             printf("Last instruction: ");
-            print_instruction(p-1, code[p-1]);
+            print_instruction(p - 1, code[p - 1]);
             exit(1);
         }
 
-        // æ£€æŸ¥æ ˆæ˜¯å¦æº¢å‡º
+        // ¼ì²éÕ»ÊÇ·ñÒç³ö
         if (t >= max_stack_size) {
             printf("\nError: Stack overflow\n");
             printf("Last instruction: ");
-            print_instruction(p-1, code[p-1]);
+            print_instruction(p - 1, code[p - 1]);
             exit(1);
         }
 
-        // æ£€æŸ¥æŒ‡ä»¤æŒ‡é’ˆæ˜¯å¦è¶Šç•Œ
+        // ¼ì²éÖ¸ÁîÖ¸ÕëÊÇ·ñÔ½½ç
         if (p < 0 || p >= insptr) {
             printf("\nError: Instruction pointer out of bounds (p=%d, insptr=%d)\n", p, insptr);
             printf("Last valid instruction: ");
-            if (p > 0) print_instruction(p-1, code[p-1]);
+            if (p > 0) print_instruction(p - 1, code[p - 1]);
             exit(1);
         }
 
         ins = code_read(p++);
-        print_instruction(p, ins);  // æ‰“å°å½“å‰æŒ‡ä»¤
-        
+        print_instruction(p, ins);  // ´òÓ¡µ±Ç°Ö¸Áî
+
         switch (ins.op)
         {
-        case lit:     // å°†ä¸€ä¸ªå¸¸é‡æ”¾åˆ°æ ˆé¡¶ 
+        case lit:     // ½«Ò»¸ö³£Á¿·Åµ½Õ»¶¥ 
             stack[++t] = ins.value;
             break;
 
-        case ini:     // åˆ†é…æ ˆç©ºé—´
+        case ini:     // ·ÖÅäÕ»¿Õ¼ä
             t += ins.value;
             if (t >= max_stack_size) {
                 printf("\nError: Stack overflow during initialization\n");
                 printf("Instruction: ");
-                print_instruction(p-1, ins);
+                print_instruction(p - 1, ins);
                 exit(1);
             }
             break;
 
-        case lod:     // å°†ä¸€ä¸ªå˜é‡æ”¾åˆ°æ ˆé¡¶
+        case lod:     // ½«Ò»¸ö±äÁ¿·Åµ½Õ»¶¥
             if (b + ins.value >= max_stack_size) {
                 printf("\nError: Invalid variable access\n");
                 printf("Instruction: ");
-                print_instruction(p-1, ins);
+                print_instruction(p - 1, ins);
                 exit(1);
             }
             stack[++t] = stack[b + ins.value];
             break;
 
-        case sto:     // å°†æ ˆé¡¶çš„å€¼å­˜å…¥ä¸€ä¸ªå˜é‡
+        case sto:     // ½«Õ»¶¥µÄÖµ´æÈëÒ»¸ö±äÁ¿
             if (b + ins.value >= max_stack_size) {
                 printf("\nError: Invalid variable access\n");
                 printf("Instruction: ");
-                print_instruction(p-1, ins);
+                print_instruction(p - 1, ins);
                 exit(1);
             }
             stack[b + ins.value] = stack[t--];
             break;
 
-        case jmp:     // æ— æ¡ä»¶è½¬ç§»
+        case jmp:     // ÎŞÌõ¼ş×ªÒÆ
             if (ins.value < 0 || ins.value >= insptr) {
-                printf("\nError: Invalid jump address %d (valid range: 0-%d)\n", ins.value, insptr-1);
+                printf("\nError: Invalid jump address %d (valid range: 0-%d)\n", ins.value, insptr - 1);
                 printf("Instruction: ");
-                print_instruction(p-1, ins);
+                print_instruction(p - 1, ins);
                 exit(1);
             }
             p = ins.value;
             break;
 
-        case jpc:     // æ ˆé¡¶ä¸º0åˆ™è½¬ç§»
+        case jpc:     // Õ»¶¥Îª0Ôò×ªÒÆ
             if (stack[t--] == 0) {
                 if (ins.value < 0 || ins.value >= insptr) {
-                    printf("\nError: Invalid jump address %d (valid range: 0-%d)\n", ins.value, insptr-1);
+                    printf("\nError: Invalid jump address %d (valid range: 0-%d)\n", ins.value, insptr - 1);
                     printf("Instruction: ");
-                    print_instruction(p-1, ins);
+                    print_instruction(p - 1, ins);
                     exit(1);
                 }
                 p = ins.value;
             }
             break;
 
-        case cal:     // è°ƒç”¨å‡½æ•°
+        case cal:     // µ÷ÓÃº¯Êı
             if (t + 3 >= max_stack_size) {
                 printf("\nError: Stack overflow during function call\n");
                 printf("Instruction: ");
-                print_instruction(p-1, ins);
+                print_instruction(p - 1, ins);
                 exit(1);
             }
-            // ä¿å­˜å½“å‰å‡½æ•°çš„çŠ¶æ€
-            stack[t + 1] = b;          // ä¿å­˜å½“å‰åŸºå€ï¼ˆåŠ¨æ€é“¾ä¿¡æ¯ï¼‰
-            stack[t + 2] = p;          // ä¿å­˜è¿”å›åœ°å€
-            stack[t + 3] = 0;          // ä¿å­˜è¿”å›å€¼
-            b = t + 1;                 // æ›´æ–°åŸºå€
+            // ±£´æµ±Ç°º¯ÊıµÄ×´Ì¬
+            stack[t + 1] = b;          // ±£´æµ±Ç°»ùÖ·£¨¶¯Ì¬Á´ĞÅÏ¢£©
+            stack[t + 2] = p;          // ±£´æ·µ»ØµØÖ·
+            stack[t + 3] = 0;          // ±£´æ·µ»ØÖµ
+            b = t + 1;                 // ¸üĞÂ»ùÖ·
             if (ins.value < 0 || ins.value >= insptr) {
-                printf("\nError: Invalid function address %d (valid range: 0-%d)\n", ins.value, insptr-1);
+                printf("\nError: Invalid function address %d (valid range: 0-%d)\n", ins.value, insptr - 1);
                 printf("Instruction: ");
-                print_instruction(p-1, ins);
+                print_instruction(p - 1, ins);
                 exit(1);
             }
-            p = ins.value;             // è·³è½¬
+            p = ins.value;             // Ìø×ª
             k = 3;
             break;
-        case opr:     // æ“ä½œ
+        case opr:     // ²Ù×÷
             switch (ins.value)
             {
-            case 0:       // è¿”å› (æ— è¿”å›å€¼)
+            case 0:       // ·µ»Ø (ÎŞ·µ»ØÖµ)
                 t = b - 1;
-                p = stack[t + 2];  // æ¢å¤è¿”å›åœ°å€
-                b = stack[t + 1];  // æ¢å¤åŸºå€
+                p = stack[t + 2];  // »Ö¸´·µ»ØµØÖ·
+                b = stack[t + 1];  // »Ö¸´»ùÖ·
                 break;
 
-            case 1:       // è¿”å› (æœ‰è¿”å›å€¼)
+            case 1:       // ·µ»Ø (ÓĞ·µ»ØÖµ)
                 t = b;
-                p = stack[t + 1];  // æ¢å¤è¿”å›åœ°å€
-                b = stack[t];  // æ¢å¤åŸºå€
-                stack[t] = stack[t + 2];  // å°†è¿”å›å€¼æ”¾åˆ°æ­£ç¡®ä½ç½®
+                p = stack[t + 1];  // »Ö¸´·µ»ØµØÖ·
+                b = stack[t];  // »Ö¸´»ùÖ·
+                stack[t] = stack[t + 2];  // ½«·µ»ØÖµ·Åµ½ÕıÈ·Î»ÖÃ
                 break;
 
-            case 2:       // æ ˆé¡¶å…ƒç´ å–è´Ÿ
+            case 2:       // Õ»¶¥ÔªËØÈ¡¸º
                 stack[t] = -stack[t];
                 break;
 
-            case 3:       // åŠ æ³•
+            case 3:       // ¼Ó·¨
                 t--;
                 stack[t] = stack[t] + stack[t + 1];
                 break;
 
-            case 4:       // å‡æ³•
+            case 4:       // ¼õ·¨
                 t--;
                 stack[t] = stack[t] - stack[t + 1];
                 break;
 
-            case 5:       // ä¹˜æ³•
+            case 5:       // ³Ë·¨
                 t--;
                 stack[t] = stack[t] * stack[t + 1];
                 break;
 
-            case 6:       // é™¤æ³•
+            case 6:       // ³ı·¨
                 t--;
                 if (stack[t + 1] == 0) {
                     printf("\nError: Division by zero\n");
                     printf("Instruction: ");
-                    print_instruction(p-1, ins);
+                    print_instruction(p - 1, ins);
                     exit(1);
                 }
                 stack[t] = stack[t] / stack[t + 1];
                 break;
 
-            case 7:       // å–æ¨¡
+            case 7:       // È¡Ä£
                 t--;
                 if (stack[t + 1] == 0) {
                     printf("\nError: Division by zero\n");
                     printf("Instruction: ");
-                    print_instruction(p-1, ins);
+                    print_instruction(p - 1, ins);
                     exit(1);
                 }
                 stack[t] = stack[t] % stack[t + 1];
@@ -269,29 +267,29 @@ void interpret()
                 stack[t] = (stack[t] >= stack[t + 1] ? 1 : 0);
                 break;
 
-            case 14:      // è¾“å‡º int
+            case 14:      // Êä³ö int
                 printf("Output: %d\n", stack[t--]);
                 break;
 
-            case 15:      // è¾“å…¥ int
+            case 15:      // ÊäÈë int
                 printf("Input int: ");
                 scanf("%d", &stack[++t]);
                 break;
 
-            case 16:      // å‚æ•°ä¼ é€’
+            case 16:      // ²ÎÊı´«µİ
                 if (t + 1 >= max_stack_size) {
                     printf("\nError: Stack overflow during parameter passing\n");
                     printf("Instruction: ");
-                    print_instruction(p-1, ins);
+                    print_instruction(p - 1, ins);
                     exit(1);
                 }
-                if (param_count >= 10) {  // é™åˆ¶æœ€å¤§å‚æ•°æ•°é‡
+                if (param_count >= 10) {  // ÏŞÖÆ×î´ó²ÎÊıÊıÁ¿
                     printf("\nError: Too many parameters\n");
                     printf("Instruction: ");
-                    print_instruction(p-1, ins);
+                    print_instruction(p - 1, ins);
                     exit(1);
                 }
-                // åœ¨å½“å‰çš„æ ˆé¡¶è¿›è¡Œå‚æ•°æ·»åŠ 
+                // ÔÚµ±Ç°µÄÕ»¶¥½øĞĞ²ÎÊıÌí¼Ó
                 stack[t + k] = stack[t];
                 k++;
                 t--;
@@ -299,7 +297,7 @@ void interpret()
             }
             break;
         }
-        //print_stack();  // åœ¨æ¯æ¡æŒ‡ä»¤æ‰§è¡Œåæ‰“å°æ ˆå†…å®¹
+        //print_stack();  // ÔÚÃ¿ÌõÖ¸ÁîÖ´ĞĞºó´òÓ¡Õ»ÄÚÈİ
     } while (p != 0);
     printf("\n=== Program Execution End ===\n");
 }
