@@ -1,0 +1,16 @@
+program MyApp { 
+	func square(x) { 
+		let result = x * x; 
+		return result; 
+	} 
+	main { 
+		let x = 15; 
+		let y = square(x);
+		output(y);
+		if (y > 50) { 
+			output(y); 
+		} else { 
+			output(0); 
+		}; 
+	} 
+} 

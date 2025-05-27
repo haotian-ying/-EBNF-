@@ -7,8 +7,9 @@
 extern Lexer* lexer;
 extern Symble sym;
 SymbolTable table = { 0 };  // Initialize symbol table
-extern int insptr;          // pcode instruction pointer
+extern int insptr;         // pcode instruction pointer
 extern instruction code[200];  // pcode instruction array
+
 // 当前函数变量+参量总数
 int param_count = 0;
 // 是否有函数定义
@@ -93,7 +94,7 @@ void func_def() {
     
     // 初始化栈帧
     ini_pos = insptr;
-    code_gen(ini, param_count + 2);  // +2 for DL, RA
+    code_gen(ini, param_count + 3);  // +2 for DL, RA
     
     // 处理函数体
     while (sym.type != RBRACE) {
@@ -318,6 +319,7 @@ void func_call(int pos) {
     if (sym.type != RPAREN) error(33);
     sym = get_sym(lexer);
     
+    // 指定被调用函数的指令起始地址
     code_gen(cal, table.entries[pos].address);
 }
 
@@ -331,8 +333,8 @@ void return_stmt() {
     } else {
         // 有返回值的返回
         expr();
-        // 把表达式的值放到返回值的位置
-        code_gen(sto, 1);
+        // 把表达式的值放到返回值的位置(相对base偏移两位)
+        code_gen(sto, 2);
         // 生成有返回值的返回指令
         code_gen(opr, 1);
     }
@@ -411,6 +413,7 @@ void factor() {
             
             if (sym.type == LPAREN && table.entries[pos].kind == FUNC) {
                 func_call(pos);
+                // 返回值处理已经放在栈顶
             } else {
                 code_gen(lod, table.entries[pos].address);
             }
@@ -461,27 +464,25 @@ void program() {
     
     // 设置main函数入口点
     table.entries[main_pos].address = insptr;
+    // 在main函数前有函数定义时回填 jmp 指令
+    if (has_func)
+        code[0].value = insptr;
     
     // 初始化main函数的栈帧
     ini_pos = insptr;
     param_count = 0;
     code_gen(ini,0);  // +3 for DL + RA
-
-
-    // 在main函数前有函数定义时回填 jmp 指令
-    if(has_func)
-        code[0].value = insptr;
     
     // 处理main函数体
     while (sym.type != RBRACE) {
         stmt();
-        printf("param_count:%d\n", param_count);
+        // printf("param_count:%d\n", param_count);
         if (sym.type != SEMICOLON) error(45);
         sym = get_sym(lexer);
     }
 
     // 回填栈帧初始化变量总数
-    code[ini_pos].value = param_count + 2;
+    code[ini_pos].value = param_count + 3;
     printf("param_count:%d\n", param_count);
     ini_pos = -1;
     param_count = 0;

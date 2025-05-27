@@ -2,7 +2,7 @@ program MyApp {
 	main { 
 		let y = 10;
 		let x = 5;
-		let z = x * y;
+		let z = x + y;
 		output(z);
 	} 
 }

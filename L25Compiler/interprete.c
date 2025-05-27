@@ -13,8 +13,11 @@ static int stack[1024];               // 数据栈
 static int max_stack_size = 1024;     // 最大栈大小
 
 int p = 0;    // 指令指针
-int b = 0;    // 基址
-int t = 0;    // 栈顶
+int b = 1;    // 基址
+int t = 1;    // 栈顶
+
+// 被调用函数建立栈帧
+int k = 3;    
 
 // 打印指令信息
 void print_instruction(int p, instruction ins) {
@@ -43,6 +46,18 @@ void get_stack_data(int* base, int* top, int* stack_data) {
     }
 }
 
+// 打印栈内容
+void print_stack() {
+    printf("Stack: [");
+    for (int i = 0; i <= t+k; i++) {
+        printf("%d", stack[i]);
+        if (i < t+k) printf(", ");
+    }
+    printf("]\n");
+    printf("instrution:%d Base: %d, Top: %d, K:%d\n",p-1,b,t,k);
+    printf("----------------------------------------\n");
+}
+
 // 解释执行
 void interpret()
 {
@@ -54,9 +69,9 @@ void interpret()
 
     // 栈的初始化
     stack[0] = 0;  // stack[0] 不使用
-    stack[1] = 0;  // 返回值
+    stack[1] = 0;  // 参数起始位置 base 随调用过程更新
     stack[2] = 0;  // 返回地址
-    stack[3] = 0;  // 参数起始位置
+    stack[3] = 0;  // 返回值
 
     printf("\n=== Program Execution Start ===\n");
     printf("----------------------------------------\n");
@@ -85,10 +100,9 @@ void interpret()
             exit(1);
         }
 
-        ins = code_read(p);  // 读取一条指令
+        ins = code_read(p++);
         print_instruction(p, ins);  // 打印当前指令
-        p++;  // 指令指针自增
-
+        
         switch (ins.op)
         {
         case lit:     // 将一个常量放到栈顶 
@@ -155,9 +169,9 @@ void interpret()
                 exit(1);
             }
             // 保存当前函数的状态
-            stack[t + 1] = b;          // 保存当前基址
+            stack[t + 1] = b;          // 保存当前基址（动态链信息）
             stack[t + 2] = p;          // 保存返回地址
-            stack[t + 3] = param_count; // 保存参数数量
+            stack[t + 3] = 0;          // 保存返回值
             b = t + 1;                 // 更新基址
             if (ins.value < 0 || ins.value >= insptr) {
                 printf("\nError: Invalid function address %d (valid range: 0-%d)\n", ins.value, insptr-1);
@@ -166,26 +180,22 @@ void interpret()
                 exit(1);
             }
             p = ins.value;             // 跳转
-            t = b + 3;                 // 更新栈顶
-            param_count = 0;           // 重置参数计数
+            k = 3;
             break;
-
         case opr:     // 操作
             switch (ins.value)
             {
             case 0:       // 返回 (无返回值)
                 t = b - 1;
-                b = stack[t + 1];
-                p = stack[t + 2];
-                param_count = stack[t + 3]; // 恢复参数计数
+                p = stack[t + 2];  // 恢复返回地址
+                b = stack[t + 1];  // 恢复基址
                 break;
 
             case 1:       // 返回 (有返回值)
                 t = b;
-                b = stack[t];
-                p = stack[t + 1];
-                stack[t] = stack[t + 3];
-                param_count = stack[t + 3]; // 恢复参数计数
+                p = stack[t + 1];  // 恢复返回地址
+                b = stack[t];  // 恢复基址
+                stack[t] = stack[t + 2];  // 将返回值放到正确位置
                 break;
 
             case 2:       // 栈顶元素取负
@@ -281,13 +291,15 @@ void interpret()
                     print_instruction(p-1, ins);
                     exit(1);
                 }
-                stack[t + 1] = stack[t];
-                t++;
-                param_count++;  // 增加参数计数
+                // 在当前的栈顶进行参数添加
+                stack[t + k] = stack[t];
+                k++;
+                t--;
                 break;
             }
             break;
         }
+        //print_stack();  // 在每条指令执行后打印栈内容
     } while (p != 0);
     printf("\n=== Program Execution End ===\n");
 }

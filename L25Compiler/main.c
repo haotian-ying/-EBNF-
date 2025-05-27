@@ -174,7 +174,7 @@ int main()
     get_stack_data(&base, &top, stack_data);
     print_stack_data(base, top, stack_data);
     
-    printf("----------------------------------------\n");
+    printf("------------------------------------------\n");
     printf("Program execution completed.\n");
 
     // Cleanup
