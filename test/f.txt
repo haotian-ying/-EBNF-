@@ -1,0 +1,9 @@
+program WhileTest {
+    main {
+        let x = 0;
+        while (x < 3) {
+            output(x);
+            x = x + 1;
+        };
+    }
+}

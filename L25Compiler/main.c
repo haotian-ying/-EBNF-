@@ -40,13 +40,13 @@ void print_pcode() {
         if (code[i].op == opr) {
             const char* opr_type;
             switch (code[i].value) {
-                case 0: opr_type = "RET"; break;
-                case 1: opr_type = "NEG"; break;
-                case 2: opr_type = "ADD"; break;
-                case 3: opr_type = "SUB"; break;
-                case 4: opr_type = "MUL"; break;
-                case 5: opr_type = "DIV"; break;
-                case 6: opr_type = "ODD"; break;
+                case 0: opr_type = "END"; break;      // 无返回值结束
+                case 1: opr_type = "RET"; break;      // 返回值
+                case 2: opr_type = "NEG"; break;      // 栈顶取负
+                case 3: opr_type = "ADD"; break;      
+                case 4: opr_type = "SUB"; break;
+                case 5: opr_type = "MUL"; break;
+                case 6: opr_type = "DIV"; break;
                 case 7: opr_type = "MOD"; break;
                 case 8: opr_type = "EQL"; break;
                 case 9: opr_type = "NEQ"; break;
@@ -56,6 +56,7 @@ void print_pcode() {
                 case 13: opr_type = "GEQ"; break;
                 case 14: opr_type = "WRITE"; break;
                 case 15: opr_type = "READ"; break;
+                case 16: opr_type = "PASS PARAM"; break;
                 default: opr_type = "UNKNOWN"; break;
             }
             printf("%d\t%s\t\t%s\n", i, op_str, opr_type);
@@ -88,8 +89,39 @@ void print_symbol_table() {
     printf("Total entries: %d\n", table.size);
 }
 
+// Function to print stack data
+void print_stack_data(int base, int top, int* stack_data) {
+    printf("%d\t%d\n", base, top);
+    printf("\nFinal Stack State:\n");
+    printf("----------------------------------------\n");
+    printf("Index\tValue\tDescription\n");
+    printf("----------------------------------------\n");
+    
+    // 打印栈帧信息
+    if (base > 0) {
+        printf("%d\t%d\tStatic Link\n", base, stack_data[base]);
+        printf("%d\t%d\tReturn Address\n", base+1, stack_data[base+1]);
+        printf("%d\t%d\tParameter Count\n", base+2, stack_data[base+2]);
+    }
+    
+    // 打印局部变量和临时值
+    for (int i = base + 3; i <= top; i++) {
+        printf("%d\t%d\t", i, stack_data[i]);
+        if (i == top) {
+            printf("Top of Stack");
+        } else if (i == base + 3) {
+            printf("First Local Variable");
+        } else {
+            printf("Stack Value");
+        }
+        printf("\n");
+    }
+    printf("----------------------------------------\n");
+}
+
 void program();
 void interpret();
+void get_stack_data(int* base, int* top, int* stack_data);
 
 int main()
 {
@@ -135,6 +167,13 @@ int main()
     printf("\nProgram Execution:\n");
     printf("----------------------------------------\n");
     interpret();
+    
+    // 获取并打印最终的栈状态
+    int base, top;
+    int stack_data[1024];  // 假设最大栈大小为1024
+    get_stack_data(&base, &top, stack_data);
+    print_stack_data(base, top, stack_data);
+    
     printf("----------------------------------------\n");
     printf("Program execution completed.\n");
 

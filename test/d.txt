@@ -1,6 +1,8 @@
 program MyApp { 
 	main { 
 		let y = 10;
-		output(y);
+		let x = 5;
+		let z = x * y;
+		output(z);
 	} 
 }

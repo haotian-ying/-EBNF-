@@ -9,6 +9,12 @@ extern Symble sym;
 SymbolTable table = { 0 };  // Initialize symbol table
 extern int insptr;          // pcode instruction pointer
 extern instruction code[200];  // pcode instruction array
+// 当前函数变量+参量总数
+int param_count = 0;
+// 是否有函数定义
+bool has_func = false;
+// 函数初始化空间的pcode指令位置
+int ini_pos = -1;
 
 // Error handling
 void error(int n) {
@@ -23,11 +29,14 @@ void enter(const char* name, ObjectType kind) {
     }
     strcpy(table.entries[table.size].name, name);
     table.entries[table.size].kind = kind;
-    table.entries[table.size].address = table.size; // Use table index as address
+    // adddress为本级偏移量
+    // base 为0时空置，偏移量为1时保存当前base, 偏移量为2时保存返回地址
+    table.entries[table.size].address = param_count + 3; 
     table.size++;
 }
 
-int position(const char* name) {
+// TODO:类型检查
+int position(char* name) {
     for (int i = table.size - 1; i >= 0; i--) {
         if (strcmp(table.entries[i].name, name) == 0) {
             return i;
@@ -36,92 +45,71 @@ int position(const char* name) {
     return -1;
 }
 
-// Block handling - Core function for recursive processing
-void block(int dx, int tx, bool is_main) {
-    int insptr0 = insptr;
-    
-    // Generate jump instruction for function entry
-    code_gen(jmp, 0);
-    
-    // Process declarations
-    declare(&dx);
-    
-    // Backpatch jump instruction
-    code[insptr0].value = insptr;
-    
-    // Set function entry point
-    if (!is_main) {
-        table.entries[tx].address = insptr;
-    }
-    
-    // Initialize stack frame
-    code_gen(ini, dx);
-    
-    // Process statements
-    stmt_list();
-    
-    // Generate return instruction
-    code_gen(ret, 0);
-}
-
-// Declaration handling
-void declare(int* pdx) {
-    while (sym.type == LETSYM) {
-        sym = get_sym(lexer); // Skip 'let'
-        
-        if (sym.type != IDENT) error(21);
-        enter(sym.lexeme, VAR);
-        sym = get_sym(lexer);
-        
-        if (sym.type == BECOMES) {
-            sym = get_sym(lexer);
-            expr();
-            code_gen(sto, table.size - 1);
-        }
-        
-        if (sym.type != SEMICOLON) error(18);
-        sym = get_sym(lexer);
-    }
-}
-
 // Function definition
 void func_def() {
+    static bool is_first_func = true;  // 标记是否是第一个函数定义
+    int insptr0 = insptr;  // 保存当前指令位置
+    
     sym = get_sym(lexer); // Skip 'func'
     
-    if (sym.type != IDENT) error(9);
+    if (sym.type != IDENT) error(4);
     char func_name[256];
     strcpy(func_name, sym.lexeme);
     sym = get_sym(lexer);
     
-    if (sym.type != LPAREN) error(10);
+    if (sym.type != LPAREN) error(5);
     sym = get_sym(lexer);
     
     // Enter function in symbol table
     enter(func_name, FUNC);
     int func_pos = table.size - 1;
     
+    // 只在第一个函数定义时生成jmp指令
+    if (is_first_func) {
+        code_gen(jmp, 0);
+        is_first_func = false;
+    }
+    
     // Process parameters
-    int param_count = 0;
+    param_count = 0;
     if (sym.type != RPAREN) {
         do {
             if(sym.type == COMMA) sym = get_sym(lexer);
-            if (sym.type != IDENT) error(16);
+            if (sym.type != IDENT) error(6);
             enter(sym.lexeme, PARAM);
             param_count++;
             sym = get_sym(lexer);
         } while (sym.type == COMMA);
     }
     
-    if (sym.type != RPAREN) error(11);
+    if (sym.type != RPAREN) error(7);
     sym = get_sym(lexer);
     
-    if (sym.type != LBRACE) error(12);
+    if (sym.type != LBRACE) error(8);
     sym = get_sym(lexer);
     
-    // Process function body using block
-    block(param_count + 3, func_pos, false); // +3 for SL, DL, RA
+    // 设置函数入口点
+    table.entries[func_pos].address = insptr;
     
-    if (sym.type != RBRACE) error(15);
+    // 初始化栈帧
+    ini_pos = insptr;
+    code_gen(ini, param_count + 2);  // +2 for DL, RA
+    
+    // 处理函数体
+    while (sym.type != RBRACE) {
+        stmt();
+        sym = get_sym(lexer);
+    }
+
+    // 回填初始化栈帧空间
+    code[ini_pos].value = param_count + 2;
+    ini_pos = -1;
+    param_count = 0;
+
+    // 生成无返回值的返回指令
+    code_gen(opr, 0);
+    
+    if (sym.type != RBRACE) error(10);
     sym = get_sym(lexer);
 }
 
@@ -129,7 +117,7 @@ void func_def() {
 void stmt_list() {
     while (sym.type != RBRACE) {
         stmt();
-        if (sym.type != SEMICOLON) error(19);
+        if (sym.type != SEMICOLON) error(11);
         sym = get_sym(lexer);
     }
 }
@@ -159,7 +147,7 @@ void stmt() {
             return_stmt();
             break;
         default:
-            error(20);
+            error(12);
     }
 }
 
@@ -167,75 +155,85 @@ void stmt() {
 void declare_stmt() {
     sym = get_sym(lexer); // Skip 'let'
     
-    if (sym.type != IDENT) error(21);
+    if (sym.type != IDENT) error(13);
+ 
+    // 增加变量数
     enter(sym.lexeme, VAR);
+    param_count++;
+
     sym = get_sym(lexer);
     
     if (sym.type == BECOMES) {
         sym = get_sym(lexer);
         expr();
-        code_gen(sto, table.size - 1);
+        code_gen(sto, table.entries[table.size - 1].address);
     }
+    if (sym.type != SEMICOLON) error(9);
 }
 
 // Assignment statement
 void assign_stmt() {
     int pos = position(sym.lexeme);
-    if (pos == -1) error(22);
+    if (pos == -1) error(14);
     sym = get_sym(lexer);
     
-    if (sym.type != BECOMES) error(23);
+    if (sym.type != BECOMES) error(15);
     sym = get_sym(lexer);
     
     expr();
-    code_gen(sto, pos);
+    code_gen(sto, table.entries[pos].address);
+    if (sym.type != SEMICOLON) error(9);
 }
 
 // Input statement
 void input_stmt() {
     sym = get_sym(lexer); // Skip 'input'
     
-    if (sym.type != LPAREN) error(37);
+    if (sym.type != LPAREN) error(16);
     sym = get_sym(lexer);
     
     do {
-        if (sym.type != IDENT) error(38);
+        if (sym.type == COMMA) sym = get_sym(lexer);
+        if (sym.type != IDENT) error(17);
         int pos = position(sym.lexeme);
-        if (pos == -1) error(39);
+        if (pos == -1) error(18);
         sym = get_sym(lexer);
         
         // Generate input instruction
         code_gen(opr, 15); // Input operation
-        code_gen(sto, pos); // Store input value
+        code_gen(sto, table.entries[pos].address); // Store input value
         
     } while (sym.type == COMMA);
     
-    if (sym.type != RPAREN) error(40);
+    if (sym.type != RPAREN) error(19);
     sym = get_sym(lexer);
+    if (sym.type != SEMICOLON) error(9);
 }
 
 // Output statement
 void output_stmt() {
     sym = get_sym(lexer); // Skip 'output'
     
-    if (sym.type != LPAREN) error(41);
+    if (sym.type != LPAREN) error(20);
     sym = get_sym(lexer);
     
     do {
+        if (sym.type == COMMA) sym = get_sym(lexer);
         expr(); // Evaluate expression
         code_gen(opr, 14); // Output operation
         
     } while (sym.type == COMMA);
     
-    if (sym.type != RPAREN) error(42);
+    if (sym.type != RPAREN) error(21);
     sym = get_sym(lexer);
+    if (sym.type != SEMICOLON) error(9);
 }
 
 // If statement
 void if_stmt() {
     sym = get_sym(lexer); // Skip 'if'
     
-    if (sym.type != LPAREN) error(24);
+    if (sym.type != LPAREN) error(22);
     sym = get_sym(lexer);
     
     bool_expr();
@@ -243,15 +241,15 @@ void if_stmt() {
     int jpc_addr = insptr;
     code_gen(jpc, 0);
     
-    if (sym.type != RPAREN) error(25);
+    if (sym.type != RPAREN) error(23);
     sym = get_sym(lexer);
     
-    if (sym.type != LBRACE) error(26);
+    if (sym.type != LBRACE) error(24);
     sym = get_sym(lexer);
     
     stmt_list();
     
-    if (sym.type != RBRACE) error(27);
+    if (sym.type != RBRACE) error(25);
     sym = get_sym(lexer);
     
     int jmp_addr = insptr;
@@ -261,14 +259,15 @@ void if_stmt() {
     
     if (sym.type == ELSESYM) {
         sym = get_sym(lexer);
-        if (sym.type != LBRACE) error(28);
+        if (sym.type != LBRACE) error(26);
         sym = get_sym(lexer);
         stmt_list();
-        if (sym.type != RBRACE) error(29);
+        if (sym.type != RBRACE) error(27);
         sym = get_sym(lexer);
     }
     
     code[jmp_addr].value = insptr;
+    if (sym.type != SEMICOLON) error(9);
 }
 
 // While statement
@@ -277,7 +276,7 @@ void while_stmt() {
     
     int loop_start = insptr;
     
-    if (sym.type != LPAREN) error(30);
+    if (sym.type != LPAREN) error(28);
     sym = get_sym(lexer);
     
     bool_expr();
@@ -285,37 +284,38 @@ void while_stmt() {
     int jpc_addr = insptr;
     code_gen(jpc, 0);
     
-    if (sym.type != RPAREN) error(31);
+    if (sym.type != RPAREN) error(29);
     sym = get_sym(lexer);
     
-    if (sym.type != LBRACE) error(32);
+    if (sym.type != LBRACE) error(30);
     sym = get_sym(lexer);
     
     stmt_list();
     
-    if (sym.type != RBRACE) error(33);
+    if (sym.type != RBRACE) error(31);
     sym = get_sym(lexer);
     
     code_gen(jmp, loop_start);
     code[jpc_addr].value = insptr;
+    if (sym.type != SEMICOLON) error(9);
 }
 
 // Function call
 void func_call(int pos) {
-    if (sym.type != LPAREN) error(35);
+    if (sym.type != LPAREN) error(32);
     sym = get_sym(lexer);
     
-    int param_count = 0;
     if (sym.type != RPAREN) {
         do {
             if(sym.type == COMMA)
                 sym = get_sym(lexer);
             expr();
-            param_count++;
+            // 生成参数传递指令 (opr 16)
+            code_gen(opr, 16);
         } while (sym.type == COMMA);
     }
     
-    if (sym.type != RPAREN) error(36);
+    if (sym.type != RPAREN) error(33);
     sym = get_sym(lexer);
     
     code_gen(cal, table.entries[pos].address);
@@ -325,8 +325,19 @@ void func_call(int pos) {
 void return_stmt() {
     sym = get_sym(lexer); // Skip 'return'
     
-    expr();
-    code_gen(ret, 0);
+    if (sym.type == SEMICOLON) {
+        // 无返回值的返回
+        code_gen(opr, 0);
+    } else {
+        // 有返回值的返回
+        expr();
+        // 把表达式的值放到返回值的位置
+        code_gen(sto, 1);
+        // 生成有返回值的返回指令
+        code_gen(opr, 1);
+    }
+    
+    if (sym.type != SEMICOLON) error(34);
 }
 
 // Boolean expression
@@ -334,7 +345,7 @@ void bool_expr() {
     expr();
     SymbleType op = sym.type;
     if (op != EQL && op != NEQ && op != LSS && op != LEQ && op != GTR && op != GEQ) {
-        error(45);
+        error(35);
     }
     sym = get_sym(lexer);
     expr();
@@ -343,10 +354,10 @@ void bool_expr() {
         case EQL: code_gen(opr, 8); break;
         case NEQ: code_gen(opr, 9); break;
         case LSS: code_gen(opr, 10); break;
-        case LEQ: code_gen(opr, 13); break;
+        case LEQ: code_gen(opr, 11); break;
         case GTR: code_gen(opr, 12); break;
-        case GEQ: code_gen(opr, 11); break;
-        default: error(45);
+        case GEQ: code_gen(opr, 13); break;
+        default: error(36);
     }
 }
 
@@ -395,13 +406,13 @@ void factor() {
     switch (sym.type) {
         case IDENT: {
             int pos = position(sym.lexeme);
-            if (pos == -1) error(46);
+            if (pos == -1) error(37);
             sym = get_sym(lexer);
             
             if (sym.type == LPAREN && table.entries[pos].kind == FUNC) {
                 func_call(pos);
             } else {
-                code_gen(lod, pos);
+                code_gen(lod, table.entries[pos].address);
             }
             break;
         }
@@ -412,47 +423,75 @@ void factor() {
         case LPAREN:
             sym = get_sym(lexer);
             expr();
-            if (sym.type != RPAREN) error(47);
+            if (sym.type != RPAREN) error(38);
             sym = get_sym(lexer);
             break;
         default:
-            error(48);
+            error(39);
     }
 }
 
 // Program entry point
 void program() {
-    if (sym.type != PROGRAMSYM) error(2);
+    if (sym.type != PROGRAMSYM) error(40);
     sym = get_sym(lexer);
     
-    if (sym.type != IDENT) error(3);
+    if (sym.type != IDENT) error(41);
     sym = get_sym(lexer);
     
-    if (sym.type != LBRACE) error(4);
+    if (sym.type != LBRACE) error(42);
     sym = get_sym(lexer);
     
     // Process function definitions
     while (sym.type == FUNCSYM) {
         func_def();
+        has_func = true;
     }
     
     // Process main function
-    if (sym.type != MAINSYM) error(5);
+    if (sym.type != MAINSYM) error(43);
     sym = get_sym(lexer);
     
-    if (sym.type != LBRACE) error(6);
+    if (sym.type != LBRACE) error(44);
     sym = get_sym(lexer);
     
     // Enter main in symbol table
     enter("main", FUNC);
     int main_pos = table.size - 1;
     
-    // Process main body using block
-    block(3, main_pos, true); // +3 for SL, DL, RA
+    // 设置main函数入口点
+    table.entries[main_pos].address = insptr;
     
-    if (sym.type != RBRACE) error(7);
+    // 初始化main函数的栈帧
+    ini_pos = insptr;
+    param_count = 0;
+    code_gen(ini,0);  // +3 for DL + RA
+
+
+    // 在main函数前有函数定义时回填 jmp 指令
+    if(has_func)
+        code[0].value = insptr;
+    
+    // 处理main函数体
+    while (sym.type != RBRACE) {
+        stmt();
+        printf("param_count:%d\n", param_count);
+        if (sym.type != SEMICOLON) error(45);
+        sym = get_sym(lexer);
+    }
+
+    // 回填栈帧初始化变量总数
+    code[ini_pos].value = param_count + 2;
+    printf("param_count:%d\n", param_count);
+    ini_pos = -1;
+    param_count = 0;
+    
+    // 生成无返回值的返回指令
+    code_gen(opr, 0);
+    
+    if (sym.type != RBRACE) error(46);
     sym = get_sym(lexer);
     
-    if (sym.type != RBRACE) error(8);
+    if (sym.type != RBRACE) error(47);
     sym = get_sym(lexer);
 }

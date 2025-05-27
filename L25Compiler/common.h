@@ -142,8 +142,8 @@ void code_list(int begin);
 void interpret();
 
 // Helper functions for symbol table
-void enter(const char* name, ObjectType kind);
-int position(const char* name);
+void enter(char* name, ObjectType kind);
+int position(char* name);
 void error(int n);
 void print_symbol_table();
 #endif 
@@ -166,9 +166,4 @@ void print_symbol_table();
     13 次栈顶 <= 栈顶 ? 1 : 0
     14 输出 int (print)
     15 输入 int (scan)
-    16 输出 bool (fprint)
-    17 输入 bool (fscan)
-    18 次栈顶 &  栈顶 (bool类型)
-    19 次栈顶 |  栈顶 (bool类型)
-    20 次栈顶 !  栈顶 (bool类型)
-    21 函数传参 (栈顶元素放到指定位置)*/
+    16 函数传参 (栈顶元素放到指定位置)*/

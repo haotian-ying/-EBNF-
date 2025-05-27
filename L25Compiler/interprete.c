@@ -12,9 +12,13 @@ extern instruction code[200]; // pcode指令数组
 static int stack[1024];               // 数据栈
 static int max_stack_size = 1024;     // 最大栈大小
 
+int p = 0;    // 指令指针
+int b = 0;    // 基址
+int t = 0;    // 栈顶
+
 // 打印指令信息
 void print_instruction(int p, instruction ins) {
-    printf("Instruction at %d: ", p);
+    printf("p = %d: ", p);
     switch (ins.op) {
         case lit: printf("LIT %d", ins.value); break;
         case opr: printf("OPR %d", ins.value); break;
@@ -30,22 +34,18 @@ void print_instruction(int p, instruction ins) {
     printf("\n");
 }
 
-// 打印栈信息
-void print_stack_info(int b, int t) {
-    printf("Stack state: base=%d, top=%d\n", b, t);
-    printf("Stack contents: ");
-    for (int i = b; i <= t && i < max_stack_size; i++) {
-        printf("%d ", stack[i]);
+// 获取栈数据
+void get_stack_data(int* base, int* top, int* stack_data) {
+    *base = b;
+    *top = t;
+    for (int i = 0; i <= t; i++) {
+        stack_data[i] = stack[i];
     }
-    printf("\n");
 }
 
 // 解释执行
 void interpret()
 {
-    int p = 0;    // 指令指针
-    int b = 0;    // 基址
-    int t = 0;    // 栈顶
     int max_instructions = 10000;     // 最大指令执行次数
     int instruction_count = 0;        // 已执行指令计数
     int param_count = 0;              // 当前函数参数计数
@@ -58,35 +58,37 @@ void interpret()
     stack[2] = 0;  // 返回地址
     stack[3] = 0;  // 参数起始位置
 
+    printf("\n=== Program Execution Start ===\n");
+    printf("----------------------------------------\n");
     do {
         // 检查指令执行次数
         if (instruction_count++ > max_instructions) {
-            printf("Error: Maximum instruction count exceeded\n");
+            printf("\nError: Maximum instruction count exceeded\n");
             printf("Last instruction: ");
             print_instruction(p-1, code[p-1]);
-            print_stack_info(b, t);
             exit(1);
         }
 
         // 检查栈是否溢出
         if (t >= max_stack_size) {
-            printf("Error: Stack overflow\n");
+            printf("\nError: Stack overflow\n");
             printf("Last instruction: ");
             print_instruction(p-1, code[p-1]);
-            print_stack_info(b, t);
             exit(1);
         }
 
         // 检查指令指针是否越界
         if (p < 0 || p >= insptr) {
-            printf("Error: Instruction pointer out of bounds (p=%d, insptr=%d)\n", p, insptr);
+            printf("\nError: Instruction pointer out of bounds (p=%d, insptr=%d)\n", p, insptr);
             printf("Last valid instruction: ");
             if (p > 0) print_instruction(p-1, code[p-1]);
-            print_stack_info(b, t);
             exit(1);
         }
 
-        ins = code_read(p++);  // 读取一条指令
+        ins = code_read(p);  // 读取一条指令
+        print_instruction(p, ins);  // 打印当前指令
+        p++;  // 指令指针自增
+
         switch (ins.op)
         {
         case lit:     // 将一个常量放到栈顶 
@@ -96,20 +98,18 @@ void interpret()
         case ini:     // 分配栈空间
             t += ins.value;
             if (t >= max_stack_size) {
-                printf("Error: Stack overflow during initialization\n");
+                printf("\nError: Stack overflow during initialization\n");
                 printf("Instruction: ");
                 print_instruction(p-1, ins);
-                print_stack_info(b, t);
                 exit(1);
             }
             break;
 
         case lod:     // 将一个变量放到栈顶
             if (b + ins.value >= max_stack_size) {
-                printf("Error: Invalid variable access\n");
+                printf("\nError: Invalid variable access\n");
                 printf("Instruction: ");
                 print_instruction(p-1, ins);
-                print_stack_info(b, t);
                 exit(1);
             }
             stack[++t] = stack[b + ins.value];
@@ -117,10 +117,9 @@ void interpret()
 
         case sto:     // 将栈顶的值存入一个变量
             if (b + ins.value >= max_stack_size) {
-                printf("Error: Invalid variable access\n");
+                printf("\nError: Invalid variable access\n");
                 printf("Instruction: ");
                 print_instruction(p-1, ins);
-                print_stack_info(b, t);
                 exit(1);
             }
             stack[b + ins.value] = stack[t--];
@@ -128,10 +127,9 @@ void interpret()
 
         case jmp:     // 无条件转移
             if (ins.value < 0 || ins.value >= insptr) {
-                printf("Error: Invalid jump address %d (valid range: 0-%d)\n", ins.value, insptr-1);
+                printf("\nError: Invalid jump address %d (valid range: 0-%d)\n", ins.value, insptr-1);
                 printf("Instruction: ");
                 print_instruction(p-1, ins);
-                print_stack_info(b, t);
                 exit(1);
             }
             p = ins.value;
@@ -140,10 +138,9 @@ void interpret()
         case jpc:     // 栈顶为0则转移
             if (stack[t--] == 0) {
                 if (ins.value < 0 || ins.value >= insptr) {
-                    printf("Error: Invalid jump address %d (valid range: 0-%d)\n", ins.value, insptr-1);
+                    printf("\nError: Invalid jump address %d (valid range: 0-%d)\n", ins.value, insptr-1);
                     printf("Instruction: ");
                     print_instruction(p-1, ins);
-                    print_stack_info(b, t);
                     exit(1);
                 }
                 p = ins.value;
@@ -152,10 +149,9 @@ void interpret()
 
         case cal:     // 调用函数
             if (t + 3 >= max_stack_size) {
-                printf("Error: Stack overflow during function call\n");
+                printf("\nError: Stack overflow during function call\n");
                 printf("Instruction: ");
                 print_instruction(p-1, ins);
-                print_stack_info(b, t);
                 exit(1);
             }
             // 保存当前函数的状态
@@ -164,10 +160,9 @@ void interpret()
             stack[t + 3] = param_count; // 保存参数数量
             b = t + 1;                 // 更新基址
             if (ins.value < 0 || ins.value >= insptr) {
-                printf("Error: Invalid function address %d (valid range: 0-%d)\n", ins.value, insptr-1);
+                printf("\nError: Invalid function address %d (valid range: 0-%d)\n", ins.value, insptr-1);
                 printf("Instruction: ");
                 print_instruction(p-1, ins);
-                print_stack_info(b, t);
                 exit(1);
             }
             p = ins.value;             // 跳转
@@ -215,10 +210,9 @@ void interpret()
             case 6:       // 除法
                 t--;
                 if (stack[t + 1] == 0) {
-                    printf("Error: Division by zero\n");
+                    printf("\nError: Division by zero\n");
                     printf("Instruction: ");
                     print_instruction(p-1, ins);
-                    print_stack_info(b, t);
                     exit(1);
                 }
                 stack[t] = stack[t] / stack[t + 1];
@@ -227,10 +221,9 @@ void interpret()
             case 7:       // 取模
                 t--;
                 if (stack[t + 1] == 0) {
-                    printf("Error: Division by zero\n");
+                    printf("\nError: Division by zero\n");
                     printf("Instruction: ");
                     print_instruction(p-1, ins);
-                    print_stack_info(b, t);
                     exit(1);
                 }
                 stack[t] = stack[t] % stack[t + 1];
@@ -251,9 +244,9 @@ void interpret()
                 stack[t] = (stack[t] < stack[t + 1] ? 1 : 0);
                 break;
 
-            case 11:      // >=
+            case 11:      // <=
                 t--;
-                stack[t] = (stack[t] >= stack[t + 1] ? 1 : 0);
+                stack[t] = (stack[t] <= stack[t + 1] ? 1 : 0);
                 break;
 
             case 12:      // >
@@ -261,63 +254,31 @@ void interpret()
                 stack[t] = (stack[t] > stack[t + 1] ? 1 : 0);
                 break;
 
-            case 13:      // <=
+            case 13:      // >=
                 t--;
-                stack[t] = (stack[t] <= stack[t + 1] ? 1 : 0);
+                stack[t] = (stack[t] >= stack[t + 1] ? 1 : 0);
                 break;
 
             case 14:      // 输出 int
-                printf("%d\n", stack[t--]);
+                printf("Output: %d\n", stack[t--]);
                 break;
 
             case 15:      // 输入 int
-                printf("input int: ");
+                printf("Input int: ");
                 scanf("%d", &stack[++t]);
                 break;
 
-            case 16:      // 输出 bool
-                if (stack[t] == 1) printf("true\n");
-                else if (stack[t] == 0) printf("false\n");
-                else printf("not bool\n");
-                t--;
-                break;
-
-            case 17:      // 输入 bool
-                char str[10];
-                printf("input bool: ");
-                scanf("%s", str);
-                t++;
-                if (str[0] == 't') stack[t] = 1;
-                else stack[t] = 0;
-                break;
-
-            case 18:      // &
-                t--;
-                stack[t] = (stack[t] && stack[t + 1] ? 1 : 0);
-                break;
-
-            case 19:      // |
-                t--;
-                stack[t] = (stack[t] || stack[t + 1] ? 1 : 0);
-                break;
-
-            case 20:      // !
-                stack[t] = (stack[t] == 0 ? 1 : 0);
-                break;
-
-            case 21:      // 参数传递
+            case 16:      // 参数传递
                 if (t + 1 >= max_stack_size) {
-                    printf("Error: Stack overflow during parameter passing\n");
+                    printf("\nError: Stack overflow during parameter passing\n");
                     printf("Instruction: ");
                     print_instruction(p-1, ins);
-                    print_stack_info(b, t);
                     exit(1);
                 }
                 if (param_count >= 10) {  // 限制最大参数数量
-                    printf("Error: Too many parameters\n");
+                    printf("\nError: Too many parameters\n");
                     printf("Instruction: ");
                     print_instruction(p-1, ins);
-                    print_stack_info(b, t);
                     exit(1);
                 }
                 stack[t + 1] = stack[t];
@@ -328,4 +289,5 @@ void interpret()
             break;
         }
     } while (p != 0);
+    printf("\n=== Program Execution End ===\n");
 }
