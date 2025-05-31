@@ -16,10 +16,11 @@ extern int insptr;            // pcode instruction pointer
 
 // Function to print pcode instructions
 void print_pcode() {
-    printf("\nPcode Instructions:\n");
-    printf("----------------------------------------\n");
-    printf("Line\tOperation\tValue\n");
-    printf("----------------------------------------\n");
+    printf("\n+--------------------------------------------------+\n");
+    printf("|                  PCODE INSTRUCTIONS               |\n");
+    printf("+--------------------------------------------------+\n");
+    printf("| Line\tOperation\tValue                           |\n");
+    printf("+--------------------------------------------------+\n");
     
     for (int i = 0; i < insptr; i++) {
         const char* op_str;
@@ -59,21 +60,23 @@ void print_pcode() {
                 case 16: opr_type = "PASS PARAM"; break;
                 default: opr_type = "UNKNOWN"; break;
             }
-            printf("%d\t%s\t\t%s\n", i, op_str, opr_type);
+            printf("| %d\t%s\t\t%-30s |\n", i, op_str, opr_type);
         } else {
-            printf("%d\t%s\t\t%d\n", i, op_str, code[i].value);
+            printf("| %d\t%s\t\t%-30d |\n", i, op_str, code[i].value);
         }
     }
-    printf("----------------------------------------\n");
-    printf("Total instructions: %d\n", insptr);
+    printf("+--------------------------------------------------+\n");
+    printf("| Total instructions: %-33d |\n", insptr);
+    printf("+--------------------------------------------------+\n");
 }
 
 // Function to print symbol table
 void print_symbol_table() {
-    printf("\nSymbol Table:\n");
-    printf("----------------------------------------\n");
-    printf("Name\t\tType\t\tAddress\n");
-    printf("----------------------------------------\n");
+    printf("\n+--------------------------------------------------+\n");
+    printf("|                    SYMBOL TABLE                   |\n");
+    printf("+--------------------------------------------------+\n");
+    printf("| Name\t\tType\t\tAddress                         |\n");
+    printf("+--------------------------------------------------+\n");
     
     for (int i = 0; i < table.size; i++) {
         const char* type_str;
@@ -83,40 +86,43 @@ void print_symbol_table() {
             case PARAM: type_str = "Parameter"; break;
             default: type_str = "Unknown"; break;
         }
-        printf("%-16s\t%-16s\t%d\n", table.entries[i].name, type_str, table.entries[i].address);
+        printf("| %-16s\t%-16s\t%-30d |\n", table.entries[i].name, type_str, table.entries[i].address);
     }
-    printf("----------------------------------------\n");
-    printf("Total entries: %d\n", table.size);
+    printf("+--------------------------------------------------+\n");
+    printf("| Total entries: %-37d |\n", table.size);
+    printf("+--------------------------------------------------+\n");
 }
 
 // Function to print stack data
 void print_stack_data(int base, int top, int* stack_data) {
-    printf("%d\t%d\n", base, top);
-    printf("\nFinal Stack State:\n");
-    printf("----------------------------------------\n");
-    printf("Index\tValue\tDescription\n");
-    printf("----------------------------------------\n");
+    printf("\n+--------------------------------------------------+\n");
+    printf("|                  FINAL STACK STATE                |\n");
+    printf("+--------------------------------------------------+\n");
+    printf("| Base: %-3d  Top: %-3d                             |\n", base, top);
+    printf("+--------------------------------------------------+\n");
+    printf("| Index\tValue\tDescription                         |\n");
+    printf("+--------------------------------------------------+\n");
     
     // 打印栈帧信息
     if (base > 0) {
-        printf("%d\t%d\tStatic Link\n", base, stack_data[base]);
-        printf("%d\t%d\tReturn Address\n", base+1, stack_data[base+1]);
-        printf("%d\t%d\tParameter Count\n", base+2, stack_data[base+2]);
+        printf("| %d\t%d\t%-35s |\n", base, stack_data[base], "Static Link");
+        printf("| %d\t%d\t%-35s |\n", base+1, stack_data[base+1], "Return Address");
+        printf("| %d\t%d\t%-35s |\n", base+2, stack_data[base+2], "Parameter Count");
     }
     
     // 打印局部变量和临时值
     for (int i = base + 3; i <= top; i++) {
-        printf("%d\t%d\t", i, stack_data[i]);
+        const char* desc;
         if (i == top) {
-            printf("Top of Stack");
+            desc = "Top of Stack";
         } else if (i == base + 3) {
-            printf("First Local Variable");
+            desc = "First Local Variable";
         } else {
-            printf("Stack Value");
+            desc = "Stack Value";
         }
-        printf("\n");
+        printf("| %d\t%d\t%-35s |\n", i, stack_data[i], desc);
     }
-    printf("----------------------------------------\n");
+    printf("+--------------------------------------------------+\n");
 }
 
 void program();
@@ -153,8 +159,9 @@ int main()
     // Get first token
     sym = get_sym(lexer);
 
-    printf("\nStarting syntax analysis:\n");
-    printf("----------------------------------------\n");
+    printf("\n+--------------------------------------------------+\n");
+    printf("|                STARTING COMPILATION               |\n");
+    printf("+--------------------------------------------------+\n");
 
     // Start parsing
     program();
@@ -164,8 +171,9 @@ int main()
     print_pcode();
 
     // Execute the program
-    printf("\nProgram Execution:\n");
-    printf("----------------------------------------\n");
+    printf("\n+--------------------------------------------------+\n");
+    printf("|                PROGRAM EXECUTION                  |\n");
+    printf("+--------------------------------------------------+\n");
     interpret();
     
     // 获取并打印最终的栈状态
@@ -174,8 +182,9 @@ int main()
     get_stack_data(&base, &top, stack_data);
     print_stack_data(base, top, stack_data);
     
-    printf("------------------------------------------\n");
-    printf("Program execution completed.\n");
+    printf("\n+--------------------------------------------------+\n");
+    printf("|               COMPILATION COMPLETED               |\n");
+    printf("+--------------------------------------------------+\n");
 
     // Cleanup
     lexer_free(lexer);

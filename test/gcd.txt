@@ -1,0 +1,40 @@
+program GCDMultipleTest {
+    func gcdTwo(a, b) { 
+        let valA = a;
+        let valB = b;
+        while (valA != valB) {
+            if (valA > valB) {
+                valA = valA - valB;
+            } else {
+                valB = valB - valA;
+            };
+        };
+        return valA;
+    }
+
+    main {
+        let n1 = 0;
+        let n2 = 0;
+        let n3 = 0;
+        let resultGcd = 0;
+        let tempGcd = 0;
+
+        input(n1, n2, n3);
+
+        if (n1 > 0) {
+            if (n2 > 0) {
+                if (n3 > 0) {
+                    tempGcd = gcdTwo(n1, n2);
+                    resultGcd = gcdTwo(tempGcd, n3);
+                    output(resultGcd);
+                } else {
+                    output(-1);
+                };
+            } else {
+                output(-1);
+            };
+        } else {
+            output(-1);
+        };
+    }
+}

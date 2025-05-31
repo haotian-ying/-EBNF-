@@ -1,0 +1,15 @@
+program MyTest1 {
+main {
+	let a = 0;
+	let b;
+	input(b);
+	while (a < 3) {
+			if (a == b) {
+				output(a);
+			} else {
+				output(a, b);
+			};
+			a = a + 1;
+		};
+	}
+}

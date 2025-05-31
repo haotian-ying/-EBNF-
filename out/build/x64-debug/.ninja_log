@@ -1,9 +1,13 @@
 # ninja log v5
-23	175	7700577387087452	L25Compiler/CMakeFiles/L25Compiler.dir/code.c.obj	e9d7b5ef33251c47
-18	176	7700577387097454	L25Compiler/CMakeFiles/L25Compiler.dir/block.c.obj	af198f9bc5bd3c15
-10	176	7700577387097454	L25Compiler/CMakeFiles/L25Compiler.dir/main.c.obj	46ad845630408321
-15	176	7700577387087452	L25Compiler/CMakeFiles/L25Compiler.dir/lexer.c.obj	cc2501dc46fd1e5d
-8	17	0	clean	ada95ba2c0c57028
-496	958	7700601488556516	L25Compiler/L25Compiler.exe	c6651a07bba5436a
-14	201	7700601973412633	build.ninja	2736c9872e1b16d2
-23	495	7700601484734881	L25Compiler/CMakeFiles/L25Compiler.dir/interprete.c.obj	2b2b203dd10a1e24
+19	402	7700673508142495	L25Compiler/CMakeFiles/L25Compiler.dir/block.c.obj	af198f9bc5bd3c15
+23	401	7700673508152497	L25Compiler/CMakeFiles/L25Compiler.dir/code.c.obj	e9d7b5ef33251c47
+21	113	7700675731322280	L25Compiler/CMakeFiles/L25Compiler.dir/main.c.obj	46ad845630408321
+15	404	7700673508172503	L25Compiler/CMakeFiles/L25Compiler.dir/lexer.c.obj	cc2501dc46fd1e5d
+22	37	0	clean	ada95ba2c0c57028
+157	593	7703709934463729	L25Compiler/L25Compiler.exe	c6651a07bba5436a
+1	169	7703819479206201	build.ninja	2736c9872e1b16d2
+13	157	7703709930932217	L25Compiler/CMakeFiles/L25Compiler.dir/interprete.c.obj	2b2b203dd10a1e24
+10	123	7703819587600525	L25Compiler/CMakeFiles/L25Compiler.dir/interprete.c.obj	2b2b203dd10a1e24
+124	499	7703819590736577	L25Compiler/L25Compiler.exe	c6651a07bba5436a
+2	1003	7703837362694668	L25Compiler/CMakeFiles/L25Compiler.dir/interprete.c.obj	2b2b203dd10a1e24
+1003	1251	7703837364489653	L25Compiler/L25Compiler.exe	c6651a07bba5436a

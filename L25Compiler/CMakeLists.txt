@@ -8,4 +8,4 @@ add_executable(L25Compiler
     lexer.c
     block.c
     code.c
-  interprete.c)
+    "interprete.c")

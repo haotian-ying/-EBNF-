@@ -1,5 +1,48 @@
-# vscode
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+*.make
+
+# Build artifacts
+build/
+out/
+*.exe
+*.dll
+*.lib
+*.obj
+*.o
+*.so
+*.a
+*.pdb
+*.ilk
+
+# Visual Studio specific files
 .vs/
+*.sln.docstates
+*.suo
+*.user
+*.vcxproj.filters
+*.vcxproj.user
+ipch/
+*.VC.db
+*.VC.VC.opendb
 
+# IDE backup files
+*~
+*.stackdump
+*.bak
+*.swp
+*.swo
 
-.out/
+# OS generated files
+Thumbs.db
+._*
+
+# Other common temporary or generated files
+*.tmp
+*.log
+*.log.*
+*.orig
