@@ -3,12 +3,12 @@
 #include <string.h>
 #include <stdbool.h>
 
-// Global variables
+// 全局变量
 extern Lexer* lexer;
 extern Symble sym;
-SymbolTable table = { 0 };  // Initialize symbol table
-extern int insptr;         // pcode instruction pointer
-extern instruction code[200];  // pcode instruction array
+SymbolTable table = { 0 };  // 初始化符号表
+extern int insptr;         // 指令指针
+extern instruction code[200];  
 
 // 当前函数变量+参量总数
 int param_count = 0;
@@ -17,13 +17,12 @@ bool has_func = false;
 // 函数初始化空间的pcode指令位置
 int ini_pos = -1;
 
-// Error handling
+// 错误处理
 void error(int n) {
     printf("Error %d at line %d, column %d\t%s\t%d\n", n, sym.line, sym.column, sym.lexeme, sym.type);
     exit(1);
 }
 
-// Symbol table operations
 void enter(const char* name, ObjectType kind) {
     if (table.size >= 100) {
         error(1); // Symbol table overflow
@@ -31,7 +30,7 @@ void enter(const char* name, ObjectType kind) {
     strcpy(table.entries[table.size].name, name);
     table.entries[table.size].kind = kind;
     // adddress为本级偏移量
-    // base 为0时空置，偏移量为1时保存当前base, 偏移量为2时保存返回地址
+    // 相对base偏移量为1时保存返回地址, 偏移量为2时保存返回值
     table.entries[table.size].address = param_count + 3; 
     table.size++;
 }
@@ -46,12 +45,12 @@ int position(char* name) {
     return -1;
 }
 
-// Function definition
+// 函数定义
 void func_def() {
     static bool is_first_func = true;  // 标记是否是第一个函数定义
     int insptr0 = insptr;  // 保存当前指令位置
     
-    sym = get_sym(lexer); // Skip 'func'
+    sym = get_sym(lexer); //  跳过'func'
     
     if (sym.type != IDENT) error(4);
     char func_name[256];
@@ -61,7 +60,6 @@ void func_def() {
     if (sym.type != LPAREN) error(5);
     sym = get_sym(lexer);
     
-    // Enter function in symbol table
     enter(func_name, FUNC);
     int func_pos = table.size - 1;
     
@@ -71,7 +69,7 @@ void func_def() {
         is_first_func = false;
     }
     
-    // Process parameters
+    // 传参
     param_count = 0;
     if (sym.type != RPAREN) {
         do {
@@ -94,7 +92,7 @@ void func_def() {
     
     // 初始化栈帧
     ini_pos = insptr;
-    code_gen(ini, param_count + 3);  // +2 for DL, RA
+    code_gen(ini, param_count + 3);  // +3：DL, RA，返回值
     
     // 处理函数体
     while (sym.type != RBRACE) {
@@ -114,7 +112,7 @@ void func_def() {
     sym = get_sym(lexer);
 }
 
-// Statement list
+// 语句集合
 void stmt_list() {
     while (sym.type != RBRACE) {
         stmt();
@@ -123,7 +121,7 @@ void stmt_list() {
     }
 }
 
-// Statement handling
+// Statement处理
 void stmt() {
     switch (sym.type) {
         case LETSYM:

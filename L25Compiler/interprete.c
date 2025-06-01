@@ -187,26 +187,26 @@ void interpret()
                 stack[t] = stack[t + 2];  
                 break;
 
-            case 2:       // ��ջԪ��ȡ��
+            case 2:       
                 stack[t] = -stack[t];
                 break;
 
-            case 3:       // �ӷ�
+            case 3:       
                 t--;
                 stack[t] = stack[t] + stack[t + 1];
                 break;
 
-            case 4:       // ����
+            case 4:       
                 t--;
                 stack[t] = stack[t] - stack[t + 1];
                 break;
 
-            case 5:       // �˷�
+            case 5:     
                 t--;
                 stack[t] = stack[t] * stack[t + 1];
                 break;
 
-            case 6:       // ����
+            case 6:      
                 t--;
                 if (stack[t + 1] == 0) {
                     printf("\nError: Division by zero\n");
@@ -217,7 +217,7 @@ void interpret()
                 stack[t] = stack[t] / stack[t + 1];
                 break;
 
-            case 7:       // ȡģ
+            case 7:      
                 t--;
                 if (stack[t + 1] == 0) {
                     printf("\nError: Division by zero\n");
@@ -258,7 +258,7 @@ void interpret()
                 stack[t] = (stack[t] >= stack[t + 1] ? 1 : 0);
                 break;
 
-            case 14:      // ��� int
+            case 14:      // int
                 printf("\n+--------------------------------------------------+\n");
                 printf("|                  PROGRAM OUTPUT                    |\n");
                 printf("+--------------------------------------------------+\n");
@@ -266,25 +266,25 @@ void interpret()
                 printf("+--------------------------------------------------+\n\n");
                 break;
 
-            case 15:      // ���� int
+            case 15:      // int
                 printf("Input int: ");
                 scanf("%d", &stack[++t]);
                 break;
 
-            case 16:      // ��������
+            case 16:     
                 if (t + 1 >= max_stack_size) {
                     printf("\nError: Stack overflow during parameter passing\n");
                     printf("Instruction: ");
                     print_instruction(p - 1, ins);
                     exit(1);
                 }
-                if (param_count >= 10) {  // ������������
+                if (param_count >= 10) { 
                     printf("\nError: Too many parameters\n");
                     printf("Instruction: ");
                     print_instruction(p - 1, ins);
                     exit(1);
                 }
-                // �ڵ�ǰ��ջ�в������
+                // 依次传递参数
                 stack[t + k] = stack[t];
                 k++;
                 t--;
@@ -292,7 +292,7 @@ void interpret()
             }
             break;
         }
-        print_stack();  // ÿ��ָ��ִ�к��ӡ��ջ
+        print_stack();  
     } while (p != 0);
     printf("\n=== Program Execution End ===\n");
 }

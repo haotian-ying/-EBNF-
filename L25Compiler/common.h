@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-// Token types
+// sym的种类
 typedef enum {
-    // Keywords
+    // 关键词
     PROGRAMSYM,
     FUNCSYM,
     MAINSYM,
@@ -18,11 +18,11 @@ typedef enum {
     INPUTSYM,
     OUTPUTSYM,
 
-    // Identifiers 
+    // 标识符
     IDENT,
     NUMBER,
 
-    // Operators
+    // 运算符
     PLUS,      // +
     MINUS,     // -
     MULTIPLY,  // *
@@ -35,7 +35,7 @@ typedef enum {
     GEQ,        // >=
     BECOMES,    // =
 
-    // Punctuation
+    // 定义相关
     LPAREN,    // (
     RPAREN,    // )
     LBRACE,    // {
@@ -43,20 +43,20 @@ typedef enum {
     SEMICOLON, // ;
     COMMA,     // ,
 
-    // Special tokens
+    // 特殊符号
     TOKENEOF,
     ERROR
 } SymbleType;
 
-// Token structure
+// symble的结构体
 typedef struct {
     SymbleType type;
-    char lexeme[256];  // The actual text of the token
-    int line;          // Line number where token appears
-    int column;        // Column number where token appears
+    char lexeme[256];  // 具体文本
+    int line;          // 行列信息
+    int column;        
 } Symble;
 
-// Lexer structure
+// 词法分析器
 typedef struct {
     FILE* source;
     char current_char;
@@ -65,25 +65,25 @@ typedef struct {
     int has_read_char;
 } Lexer;
 
-// Symbol table entry types
+// Symbol对应的符号表类型
 typedef enum {
-    FUNC,       // Function
-    VAR,        // Variable
-    PARAM       // Parameter
+    FUNC,       
+    VAR,        
+    PARAM       // 函数参数
 } ObjectType;
 
-// Symbol table entry
+// ymbol对应的符号表表项
 typedef struct {
-    char name[256];     // Identifier name
-    ObjectType kind;    // Type of the entry
-    int address;        // Memory address
-    int size;           // Size of data area (for functions)
+    char name[256];     
+    ObjectType kind;    
+    int address;       
+    int size;           
 } TableEntry;
 
 // Symbol table
 typedef struct {
-    TableEntry entries[100];  // Array of symbol table entries
-    int size;                 // Current size of symbol table
+    TableEntry entries[100];  // symbol符号表
+    int size;                 
 } SymbolTable;
 
 /* Pcode操作码 */
@@ -106,13 +106,13 @@ typedef struct {
 } instruction;
 
 
-// Function declarations of lexer
+// lexer函数定义
 Lexer* lexer_init(FILE* source);
 void lexer_free(Lexer* lexer);
 Symble get_sym(Lexer* lexer);
 const char* symble_type_to_string(SymbleType type);
 
-// Function declarations of parser
+// 语法分析器的函数定义
 void pogram();
 void func_def();
 void param_list();
@@ -134,14 +134,14 @@ void expr();
 void term();
 void factor();
 
-// code generate
+// 中间代码生成
 void code_gen(ObjectType op,int value);
 instruction code_read(int p);
 void code_list(int begin);
 
 void interpret();
 
-// Helper functions for symbol table
+// 其他相关函数
 void enter(char* name, ObjectType kind);
 int position(char* name);
 void error(int n);
