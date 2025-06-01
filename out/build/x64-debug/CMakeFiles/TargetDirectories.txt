@@ -1,5 +1,0 @@
-D:/编译原理/code/大作业/L25Compiler/out/build/x64-debug/CMakeFiles/edit_cache.dir
-D:/编译原理/code/大作业/L25Compiler/out/build/x64-debug/CMakeFiles/rebuild_cache.dir
-D:/编译原理/code/大作业/L25Compiler/out/build/x64-debug/L25Compiler/CMakeFiles/L25Compiler.dir
-D:/编译原理/code/大作业/L25Compiler/out/build/x64-debug/L25Compiler/CMakeFiles/edit_cache.dir
-D:/编译原理/code/大作业/L25Compiler/out/build/x64-debug/L25Compiler/CMakeFiles/rebuild_cache.dir
